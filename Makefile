@@ -1,19 +1,26 @@
 #Makefile for nec2c     21 Aug 2003
 
 SHELL = /bin/sh
-CC    = gcc -Wall -O3 -g
+PROJECT = nec2c
+BINDIR  = /usr/local/bin
+CC = gcc -Wall -O2
 
-objects = nec2c.o misc.o somnec.o
+objects = calculations.o fields.o geometry.o ground.o input.o \
+	  main.o matrix.o misc.o network.o radiation.o somnec.o
 
-nec2c : $(objects)
-	$(CC) -lm -lefence -o nec2c $(objects)
+$(PROJECT) : $(objects)
+	    $(CC) -lm -o $(PROJECT) $(objects)
 
 $(objects) : nec2c.h
 
 nec2dx : 
 	g77 -o nec2dx nec2dx.f
+	install -m 755 --strip nec2dx $(BINDIR)
 
-.PHONY : clean
-clean  :
-	-rm -f *.o *~
+install : $(PROJECT)
+	  install -m 755 $(PROJECT) $(BINDIR)
+
+.PHONY : distclean
+distclean  :
+	-rm -f *.o *~ $(PROJECT) nec2dx
 
