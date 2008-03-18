@@ -80,7 +80,7 @@
 /* max length of a line read from input file */
 #define	LINE_LEN	132
 /* version of fortran source for the -v option */
-#define		version "nec2c v0.5"
+#define		version "nec2c 0.7"
 
 /*** Structs encapsulating global ("common") variables ***/
 /* common  /crnt/ */

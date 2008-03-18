@@ -1938,7 +1938,7 @@ void prnt( int in1, int in2, int in3, long double fl1, long double fl2,
 		   long double fl6, char *ia, int ichar )
 {
   /* record to be output and buffer used to make it */
-  char record[101+ichar*4], buf[15];
+  char record[101+ichar*4], buff[15];
   int in[3], i1, i;
   long double fl[6];
 
@@ -1968,8 +1968,8 @@ void prnt( int in1, int in2, int in3, long double fl1, long double fl2,
 	  strcat( record, "     " );
 	else
 	{
-	  sprintf( buf, "%5d", in[i] );
-	  strcat( record, buf );
+	  snprintf( buff, 6, "%5d", in[i] );
+	  strcat( record, buff );
 	}
   }
 
@@ -1978,8 +1978,8 @@ void prnt( int in1, int in2, int in3, long double fl1, long double fl2,
   {
 	if( fabsl( fl[i]) >= 1.0e-20 )
 	{
-	  sprintf( buf, " %11.4LE", fl[i] );
-	  strcat( record, buf );
+	  snprintf( buff, 15, " %11.4LE", fl[i] );
+	  strcat( record, buff );
 	}
 	else
 	  strcat( record, "            " );
@@ -1996,26 +1996,27 @@ void prnt( int in1, int in2, int in3, long double fl1, long double fl2,
 
 static void sig_handler( int signal )
 {
+  fprintf( stderr, "\n" );
   switch( signal )
   {
 	case SIGINT :
-	  fprintf( stderr, "\n%s\n", "nec2c: exiting via user interrupt" );
+	  fprintf( stderr, "%s\n", "nec2c: exiting via user interrupt" );
 	  exit( signal );
 
 	case SIGSEGV :
-	  fprintf( stderr, "\n%s\n", "nec2c: segmentation fault" );
+	  fprintf( stderr, "%s\n", "nec2c: segmentation fault" );
 	  exit( signal );
 
 	case SIGFPE :
-	  fprintf( stderr, "\n%s\n", "nec2c: floating point exception" );
+	  fprintf( stderr, "%s\n", "nec2c: floating point exception" );
 	  exit( signal );
 
 	case SIGABRT :
-	  fprintf( stderr, "\n%s\n", "nec2c: abort signal received" );
+	  fprintf( stderr, "%s\n", "nec2c: abort signal received" );
 	  exit( signal );
 
 	case SIGTERM :
-	  fprintf( stderr, "\n%s\n", "nec2c: termination request received" );
+	  fprintf( stderr, "%s\n", "nec2c: termination request received" );
 
 	  stop( signal );
   }

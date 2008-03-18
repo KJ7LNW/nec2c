@@ -5,21 +5,21 @@
 
  Numerical Electromagnetics Code (NEC2)  developed at Lawrence
  Livermore lab., Livermore, CA.  (contact G. Burke at 415-422-8414
- for problems with the NEC code. For problems with the vax implem- 
- entation, contact J. Breakall at 415-422-8196 or E. Domning at 415 
- 422-5936) 
- file created 4/11/80. 
+ for problems with the NEC code. For problems with the vax implem-
+ entation, contact J. Breakall at 415-422-8196 or E. Domning at 415
+ 422-5936)
+ file created 4/11/80.
 
-                ***********Notice********** 
- This computer code material was prepared as an account of work 
- sponsored by the United States government.  Neither the United 
- States nor the United States Department Of Energy, nor any of 
- their employees, nor any of their contractors, subcontractors, 
+                ***********Notice**********
+ This computer code material was prepared as an account of work
+ sponsored by the United States government.  Neither the United
+ States nor the United States Department Of Energy, nor any of
+ their employees, nor any of their contractors, subcontractors,
  or their employees, makes any warranty, express or implied, or
- assumes any legal liability or responsibility for the accuracy, 
- completeness or usefulness of any information, apparatus, product 
- or process disclosed, or represents that its use would not infringe 
- privately-owned rights. 
+ assumes any legal liability or responsibility for the accuracy,
+ completeness or usefulness of any information, apparatus, product
+ or process disclosed, or represents that its use would not infringe
+ privately-owned rights.
 
 *******************************************************************/
 

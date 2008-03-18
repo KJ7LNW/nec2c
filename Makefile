@@ -3,7 +3,7 @@
 SHELL = /bin/sh
 PROJECT = nec2c
 BINDIR  = /usr/local/bin
-CC = gcc -Wall -O2
+CC = gcc -Wall -O2 -march=native
 
 objects = calculations.o fields.o geometry.o ground.o input.o \
 	  main.o matrix.o misc.o network.o radiation.o somnec.o
@@ -13,7 +13,7 @@ $(PROJECT) : $(objects)
 
 $(objects) : nec2c.h
 
-nec2dx : 
+nec2dx :
 	g77 -o nec2dx nec2dx.f
 	install -m 755 --strip nec2dx $(BINDIR)
 
