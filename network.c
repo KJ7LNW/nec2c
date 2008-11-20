@@ -65,7 +65,7 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
   ndimn = j = (2*netcx.nonet + vsorc.nsant);
 
   /* Allocate network buffers */
-  if( netcx.nonet > 0 )
+  if( netcx.nonet != 0 )
   {
 	mem_alloc( (void *)&rhs, data.np3m * sizeof(complex long double) );
 
@@ -81,6 +81,12 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 
 	mem_alloc( (void *)&vsrc, vsorc.nsant * sizeof(complex long double) );
   }
+  else
+	if( netcx.masym != 0)
+	{
+	  i = j * sizeof(int);
+	  mem_alloc( (void *)&ipnt, i );
+	}
 
   if( netcx.ntsol == 0)
   {

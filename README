@@ -150,6 +150,11 @@
   code, I also fixed some minor bugs like typos and tidied error
   messages.
 
+  Version 0.8: After a segmentation fault bug report, I fixed the
+  netwk() function in network.c to allow allocation of the ipnt buffer
+  when maximum admittance matrix asymmetry printing is requested in the
+  Ex card.
+
   7. License:
   nec2c is Public Domain, same as the original FORTRAN source.
   Please keep any software you write incorporating nec2c in Public Domain
