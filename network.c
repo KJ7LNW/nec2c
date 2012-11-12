@@ -49,15 +49,12 @@ extern FILE *input_fp, *output_fp, *plot_fp;
 void netwk( complex long double *cm, int *ip, complex long double *einc )
 {
   int *ipnt = NULL, *nteqa = NULL, *ntsca = NULL;
-  int jump1, jump2, nteq=0, ntsc=0, nseg2, irow2=0, j, ndimn;
-  int neqz2, neqt, irow1=0, i, nseg1, isc1=0, isc2=0;
-  long double asmx, asa, pwr, y11r, y11i, y12r, y12i, y22r, y22i;
+  int nteq=0, ntsc=0, irow2=0, j, ndimn;
+  int neqt, irow1=0, i, isc1=0;
+  size_t mreq;
+  long double pwr;
   complex long double *vsrc = NULL, *rhs = NULL, *cmn = NULL;
   complex long double *rhnt = NULL, *rhnx = NULL, ymit, vlt, cux;
-
-  neqz2= netcx.neq2;
-  if( neqz2 == 0)
-	neqz2=1;
 
   netcx.pin=0.;
   netcx.pnls=0.;
@@ -67,35 +64,39 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
   /* Allocate network buffers */
   if( netcx.nonet != 0 )
   {
-	mem_alloc( (void *)&rhs, data.np3m * sizeof(complex long double) );
+	mreq = data.np3m * sizeof(complex long double);
+	mem_alloc( (void *)&rhs, mreq );
 
-	i = j * sizeof(complex long double);
-	mem_alloc( (void *)&rhnt, i );
-	mem_alloc( (void *)&rhnx, i );
-	mem_alloc( (void *)&cmn, i * j );
+	mreq = j * sizeof(complex long double);
+	mem_alloc( (void *)&rhnt, mreq );
+	mem_alloc( (void *)&rhnx, mreq );
+	mem_alloc( (void *)&cmn, mreq * j );
 
-	i = j * sizeof(int);
-	mem_alloc( (void *)&ntsca, i );
-	mem_alloc( (void *)&nteqa, i );
-	mem_alloc( (void *)&ipnt, i );
+	mreq = j * sizeof(int);
+	mem_alloc( (void *)&ntsca, mreq );
+	mem_alloc( (void *)&nteqa, mreq );
+	mem_alloc( (void *)&ipnt, mreq );
 
-	mem_alloc( (void *)&vsrc, vsorc.nsant * sizeof(complex long double) );
+	mreq = vsorc.nsant * sizeof(complex long double);
+	mem_alloc( (void *)&vsrc, mreq );
   }
   else
 	if( netcx.masym != 0)
 	{
-	  i = j * sizeof(int);
-	  mem_alloc( (void *)&ipnt, i );
+	  mreq = j * sizeof(int);
+	  mem_alloc( (void *)&ipnt, mreq );
 	}
 
   if( netcx.ntsol == 0)
   {
+	int nseg1;
 	/* compute relative matrix asymmetry */
 	if( netcx.masym != 0)
 	{
 	  irow1=0;
 	  if( netcx.nonet != 0)
 	  {
+		int nseg1;
 		for( i = 0; i < netcx.nonet; i++ )
 		{
 		  nseg1= netcx.iseg1[i];
@@ -155,6 +156,7 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 
 	  if( irow1 >= 2)
 	  {
+		long double asmx, asa;
 		for( i = 0; i < irow1; i++ )
 		{
 		  isc1= ipnt[i]-1;
@@ -226,6 +228,9 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 
 	  for( j = 0; j < netcx.nonet; j++ )
 	  {
+		int jump1, jump2, isc2, nseg2;
+		long double y11r, y11i, y12r, y12i, y22r, y22i;
+
 		nseg1= netcx.iseg1[j];
 		nseg2= netcx.iseg2[j];
 
@@ -244,15 +249,15 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 		  y12r=0.;
 		  y12i=1./( netcx.x11r[j]* sinl( y22r));
 		  y11r= netcx.x12r[j];
-		  y11i=- y12i* cosl( y22r);
+		  y11i= -y12i* cosl( y22r);
 		  y22r= netcx.x22r[j];
 		  y22i= y11i+ netcx.x22i[j];
 		  y11i= y11i+ netcx.x12i[j];
 
 		  if( netcx.ntyp[j] != 2)
 		  {
-			y12r=- y12r;
-			y12i=- y12i;
+			y12r= -y12r;
+			y12i= -y12i;
 		  }
 
 		} /* if( netcx.ntyp[j] <= 1) */
@@ -533,7 +538,10 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
   }
 
   if( (vsorc.nsant+vsorc.nvqd) == 0)
+  {
+	free_ptr( (void *)&ipnt );
 	return;
+  }
 
   fprintf( output_fp, "\n\n\n"
 	  "                        "
@@ -593,31 +601,29 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 
   } /* if( vsorc.nsant != 0) */
 
-  if( vsorc.nvqd == 0)
-	return;
+  if( vsorc.nvqd != 0)
+	for( i = 0; i < vsorc.nvqd; i++ )
+	{
+	  isc1= vsorc.ivqd[i]-1;
+	  vlt= vsorc.vqd[i];
+	  cux= cmplx( crnt.air[isc1], crnt.aii[isc1]);
+	  ymit= cmplx( crnt.bir[isc1], crnt.bii[isc1]);
+	  netcx.zped= cmplx( crnt.cir[isc1], crnt.cii[isc1]);
+	  pwr= data.si[isc1]* TP*.5;
+	  cux=( cux- ymit* sinl( pwr)+ netcx.zped* cosl( pwr))* data.wlam;
+	  ymit= cux/ vlt;
+	  netcx.zped= vlt/ cux;
+	  pwr=.5* creall( vlt* conjl( cux));
+	  netcx.pin= netcx.pin+ pwr;
+	  irow2= data.itag[isc1];
 
-  for( i = 0; i < vsorc.nvqd; i++ )
-  {
-	isc1= vsorc.ivqd[i]-1;
-	vlt= vsorc.vqd[i];
-	cux= cmplx( crnt.air[isc1], crnt.aii[isc1]);
-	ymit= cmplx( crnt.bir[isc1], crnt.bii[isc1]);
-	netcx.zped= cmplx( crnt.cir[isc1], crnt.cii[isc1]);
-	pwr= data.si[isc1]* TP*.5;
-	cux=( cux- ymit* sinl( pwr)+ netcx.zped* cosl( pwr))* data.wlam;
-	ymit= cux/ vlt;
-	netcx.zped= vlt/ cux;
-	pwr=.5* creall( vlt* conjl( cux));
-	netcx.pin= netcx.pin+ pwr;
-	irow2= data.itag[isc1];
+	  fprintf( output_fp,	"\n"
+		  " %4d %5d %11.4LE %11.4LE %11.4LE %11.4LE"
+		  " %11.4LE %11.4LE %11.4LE %11.4LE %11.4LE",
+		  irow2, isc1+1, creall(vlt), cimagl(vlt), creall(cux), cimagl(cux),
+		  creall(netcx.zped), cimagl(netcx.zped), creall(ymit), cimagl(ymit), pwr );
 
-	fprintf( output_fp,	"\n"
-		" %4d %5d %11.4LE %11.4LE %11.4LE %11.4LE"
-		" %11.4LE %11.4LE %11.4LE %11.4LE %11.4LE",
-		irow2, isc1+1, creall(vlt), cimagl(vlt), creall(cux), cimagl(cux),
-		creall(netcx.zped), cimagl(netcx.zped), creall(ymit), cimagl(ymit), pwr );
-
-  } /* for( i = 0; i < vsorc.nvqd; i++ ) */
+	} /* for( i = 0; i < vsorc.nvqd; i++ ) */
 
   /* Free network buffers */
   free_ptr( (void *)&ipnt );

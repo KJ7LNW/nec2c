@@ -57,7 +57,7 @@ extern FILE *input_fp, *output_fp, *plot_fp;
 /* cmset sets up the complex structure matrix in the array cm */
 void cmset( int nrow, complex long double *cm, long double rkhx, int iexkx )
 {
-  int mp2, neq, npeq, iout, it, i, j, i1, i2, in2;
+  int mp2, neq, npeq, it, i, j, i1, i2, in2;
   int im1, im2, ist, ij, ipr, jss, jm1, jm2, jst, k, ka, kk;
   complex long double zaj, deter, *scm = NULL;
 
@@ -68,7 +68,6 @@ void cmset( int nrow, complex long double *cm, long double rkhx, int iexkx )
 
   dataj.rkh= rkhx;
   dataj.iexk= iexkx;
-  iout=2* matpar.npblk* nrow;
   it= matpar.nlast;
 
   for( i = 0; i < nrow; i++ )
@@ -159,7 +158,8 @@ void cmset( int nrow, complex long double *cm, long double rkhx, int iexkx )
 	return;
 
   /* Allocate to scratch memory */
-  mem_alloc( (void *)&scm, data.np2m * sizeof(complex long double) );
+  size_t mreq = data.np2m * sizeof(complex long double);
+  mem_alloc( (void *)&scm, mreq );
 
   /* combine elements for symmetry modes */
   for( i = 0; i < it; i++ )
@@ -313,16 +313,16 @@ void cmss( int j1, int j2, int im1, int im2,
 void cmsw( int j1, int j2, int i1, int i2, complex long double *cm,
 	complex long double *cw, int ncw, int nrow, int itrp )
 {
-  int neqs, k, icgo, i, ipch, jl, j, js, il, ip;
   int jsnox; /* -1 offset to "jsno" for array indexing */
-  long double xi, yi, zi, cabi, sabi, salpi, fsign=1., pyl, pxl;
   complex long double emel[9];
 
-  neqs= data.np2m;
   jsnox = segj.jsno-1;
 
   if( itrp >= 0)
   {
+	int k, icgo, i, ipch, jl, j, js, il, ip;
+	long double xi, yi, zi, cabi, sabi, salpi, fsign=1., pyl, pxl;
+
 	k=-1;
 	icgo=0;
 
@@ -798,10 +798,10 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 	set= sinl( p3);
 	pxl= cth* cph* cet- sph* set;
 	pyl= cth* sph* cet+ cph* set;
-	pzl=- sth* cet;
-	wx=- sth* cph;
-	wy=- sth* sph;
-	wz=- cth;
+	pzl= -sth* cet;
+	wx= -sth* cph;
+	wy= -sth* sph;
+	wz= -cth;
 	qx= wy* pzl- wz* pyl;
 	qy= wz* pxl- wx* pzl;
 	qz= wx* pyl- wy* pxl;
@@ -830,7 +830,7 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 	  {
 		for( i = 0; i < data.n; i++ )
 		{
-		  arg=- TP*( wx* data.x[i]+ wy* data.y[i]+ wz* data.z[i]);
+		  arg= -TP*( wx* data.x[i]+ wy* data.y[i]+ wz* data.z[i]);
 		  e[i]=-( pxl* data.cab[i]+ pyl* data.sab[i]+ pzl*
 			  data.salp[i])* cmplx( cosl( arg), sinl( arg));
 		}
@@ -840,11 +840,11 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 		  tt1=( pyl* cph- pxl* sph)*( rrh- rrv);
 		  cx= rrv* pxl- tt1* sph;
 		  cy= rrv* pyl+ tt1* cph;
-		  cz=- rrv* pzl;
+		  cz= -rrv* pzl;
 
 		  for( i = 0; i < data.n; i++ )
 		  {
-			arg=- TP*( wx* data.x[i]+ wy* data.y[i]- wz* data.z[i]);
+			arg= -TP*( wx* data.x[i]+ wy* data.y[i]- wz* data.z[i]);
 			e[i]= e[i]-( cx* data.cab[i]+ cy* data.sab[i]+
 				cz* data.salp[i])* cmplx(cosl( arg), sinl( arg));
 		  }
@@ -863,7 +863,7 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 		i++;
 		i1 += 2;
 		i2 = i1+1;
-		arg=- TP*( wx* data.px[i]+ wy* data.py[i]+ wz* data.pz[i]);
+		arg= -TP*( wx* data.px[i]+ wy* data.py[i]+ wz* data.pz[i]);
 		tt1= cmplx( cosl( arg), sinl( arg))* data.psalp[i]* RETA;
 		e[i2]=( qx* data.t1x[i]+ qy* data.t1y[i]+ qz* data.t1z[i])* tt1;
 		e[i1]=( qx* data.t2x[i]+ qy* data.t2y[i]+ qz* data.t2z[i])* tt1;
@@ -884,7 +884,7 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 		i++;
 		i1 += 2;
 		i2 = i1+1;
-		arg=- TP*( wx* data.px[i]+ wy* data.py[i]- wz* data.pz[i]);
+		arg= -TP*( wx* data.px[i]+ wy* data.py[i]- wz* data.pz[i]);
 		tt1= cmplx( cosl( arg), sinl( arg))* data.psalp[i]* RETA;
 		e[i2]= e[i2]+( cx* data.t1x[i]+ cy* data.t1y[i]+ cz* data.t1z[i])* tt1;
 		e[i1]= e[i1]+( cx* data.t2x[i]+ cy* data.t2y[i]+ cz* data.t2z[i])* tt1;
@@ -896,7 +896,7 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 	/* incident plane wave, elliptic polarization. */
 	tt1=-(CPLX_01)* p6;
 	if( ipr == 3)
-	  tt1=- tt1;
+	  tt1= -tt1;
 
 	if( data.n != 0)
 	{
@@ -906,7 +906,7 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 
 	  for( i = 0; i < data.n; i++ )
 	  {
-		arg=- TP*( wx* data.x[i]+ wy* data.y[i]+ wz* data.z[i]);
+		arg= -TP*( wx* data.x[i]+ wy* data.y[i]+ wz* data.z[i]);
 		e[i]=-( cx* data.cab[i]+ cy* data.sab[i]+ cz*
 			data.salp[i])* cmplx( cosl( arg), sinl( arg));
 	  }
@@ -916,11 +916,11 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 		tt2=( cy* cph- cx* sph)*( rrh- rrv);
 		cx= rrv* cx- tt2* sph;
 		cy= rrv* cy+ tt2* cph;
-		cz=- rrv* cz;
+		cz= -rrv* cz;
 
 		for( i = 0; i < data.n; i++ )
 		{
-		  arg=- TP*( wx* data.x[i]+ wy* data.y[i]- wz* data.z[i]);
+		  arg= -TP*( wx* data.x[i]+ wy* data.y[i]- wz* data.z[i]);
 		  e[i]= e[i]-( cx* data.cab[i]+ cy* data.sab[i]+
 			  cz* data.salp[i])* cmplx(cosl( arg), sinl( arg));
 		}
@@ -943,7 +943,7 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 	  i++;
 	  i1 += 2;
 	  i2 = i1+1;
-	  arg=- TP*( wx* data.px[i]+ wy* data.py[i]+ wz* data.pz[i]);
+	  arg= -TP*( wx* data.px[i]+ wy* data.py[i]+ wz* data.pz[i]);
 	  tt2= cmplx( cosl( arg), sinl( arg))* data.psalp[i]* RETA;
 	  e[i2]=( cx* data.t1x[i]+ cy* data.t1y[i]+ cz* data.t1z[i])* tt2;
 	  e[i1]=( cx* data.t2x[i]+ cy* data.t2y[i]+ cz* data.t2z[i])* tt2;
@@ -964,7 +964,7 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 	  i++;
 	  i1 += 2;
 	  i2 = i1+1;
-	  arg=- TP*( wx* data.px[i]+ wy* data.py[i]- wz* data.pz[i]);
+	  arg= -TP*( wx* data.px[i]+ wy* data.py[i]- wz* data.pz[i]);
 	  tt1= cmplx( cosl( arg), sinl( arg))* data.psalp[i]* RETA;
 	  e[i2]= e[i2]+( cx* data.t1x[i]+ cy* data.t1y[i]+ cz* data.t1z[i])* tt1;
 	  e[i1]= e[i1]+( cx* data.t2x[i]+ cy* data.t2y[i]+ cz* data.t2z[i])* tt1;
@@ -1030,7 +1030,7 @@ void etmns( long double p1, long double p2, long double p3, long double p4,
 
 	} /* if( arg >= 1.e-30) */
 
-	arg=- TP* r;
+	arg= -TP* r;
 	tt1= cmplx( cosl( arg), sinl( arg));
 
 	if( i < data.n )
@@ -1079,7 +1079,8 @@ void factr( int n, complex long double *a, int *ip, int ndim)
   complex long double arj, *scm = NULL;
 
   /* Allocate to scratch memory */
-  mem_alloc( (void *)&scm, data.np2m * sizeof(complex long double) );
+  size_t mreq = data.np2m * sizeof(complex long double);
+  mem_alloc( (void *)&scm, mreq );
 
   /* Un-transpose the matrix for Gauss elimination */
   for( i = 1; i < n; i++ )
@@ -1251,7 +1252,7 @@ void fblock( int nrow, int ncol, int imax, int ipsym )
 	  {
 		deter= smat.ssx[i+j*smat.nop];
 		smat.ssx[i+(j+kk)*smat.nop]= deter;
-		smat.ssx[i+kk+(j+kk)*smat.nop]=- deter;
+		smat.ssx[i+kk+(j+kk)*smat.nop]= -deter;
 		smat.ssx[i+kk+j*smat.nop]= deter;
 	  }
 	}
@@ -1276,7 +1277,8 @@ void solve( int n, complex long double *a, int *ip,
   complex long double sum, *scm = NULL;
 
   /* Allocate to scratch memory */
-  mem_alloc( (void *)&scm, data.np2m * sizeof(complex long double) );
+  size_t mreq = data.np2m * sizeof(complex long double);
+  mem_alloc( (void *)&scm, mreq );
 
   /* forward substitution */
   for( i = 0; i < n; i++ )
@@ -1329,7 +1331,8 @@ void solves( complex long double *a, int *ip, complex long double *b,
   nrow= neq;
 
   /* Allocate to scratch memory */
-  mem_alloc( (void *)&scm, data.np2m * sizeof(complex long double) );
+  size_t mreq = data.np2m * sizeof(complex long double);
+  mem_alloc( (void *)&scm, mreq );
 
   if( smat.nop != 1)
   {

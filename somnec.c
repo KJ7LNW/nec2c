@@ -180,15 +180,16 @@ void somnec( long double epr, long double sig, long double fmhz )
 /* and its derivative for complex argument z. */
 void bessel( complex long double z, complex long double *j0, complex long double *j0p )
 {
-  int k, i, ib, iz, miz;
+  int k, ib;
   static int m[101], init = FALSE;
   static long double a1[25], a2[25];
-  long double tst, zms;
+  long double zms;
   complex long double p0z, p1z, q0z, q1z, zi, zi2, zk, cz, sz, j0x=CPLX_00, j0px=CPLX_00;
 
   /* initialization of constants */
   if( ! init )
   {
+	int i;
 	for( k = 1; k <= 25; k++ )
 	{
 	  i = k-1;
@@ -198,7 +199,7 @@ void bessel( complex long double z, complex long double *j0, complex long double
 
 	for( i = 1; i <= 101; i++ )
 	{
-	  tst=1.0;
+	  long double tst = 1.0;
 	  for( k = 0; k < 24; k++ )
 	  {
 		init = k;
@@ -228,8 +229,8 @@ void bessel( complex long double z, complex long double *j0, complex long double
 	  ib=1;
 
 	/* series expansion */
-	iz=zms;
-	miz=m[iz];
+	int iz=zms;
+	int miz=m[iz];
 	*j0=CPLX_10;
 	*j0p=*j0;
 	zk=*j0;
@@ -435,7 +436,7 @@ void fbar( complex long double p, complex long double *fbar )
 
 	for( i = 1; i <= 100; i++ )
 	{
-	  pow=- pow* zs/ (long double)i;
+	  pow= -pow* zs/ (long double)i;
 	  term= pow/(2.* i+1.);
 	  sum= sum+ term;
 	  tms= creal( term* conj( term));
@@ -452,7 +453,7 @@ void fbar( complex long double p, complex long double *fbar )
   if( creal( z) < 0.)
   {
 	minus=1;
-	z=- z;
+	z= -z;
   }
   else
 	minus=0;
@@ -463,13 +464,13 @@ void fbar( complex long double p, complex long double *fbar )
 
   for( i = 1; i <= 6; i++ )
   {
-	term =- term*(2.*i -1.)* zs;
+	term = -term*(2.*i -1.)* zs;
 	sum += term;
   }
 
   if( minus == 1)
 	sum -= 2.* SP* z* cexp( z* z);
-  *fbar=- sum;
+  *fbar= -sum;
 }
 
 /*-----------------------------------------------------------------------*/
@@ -651,7 +652,7 @@ void gshank( complex long double start, complex long double dela,
 /* order zero, and its derivative for complex argument z */
 void hankel( complex long double z, complex long double *h0, complex long double *h0p )
 {
-  int i, k, ib, iz, miz;
+  int k, ib;
   static int m[101], init = FALSE;
   static long double a1[25], a2[25], a3[25], a4[25], psi, tst, zms;
   complex long double clogz, j0, j0p, p0z, p1z, q0z, q1z, y0=CPLX_00, y0p=CPLX_00, zi, zi2, zk;
@@ -659,6 +660,7 @@ void hankel( complex long double z, complex long double *h0, complex long double
   /* initialization of constants */
   if( ! init )
   {
+	int i;
 	psi=-GAMMA;
 	for( k = 1; k <= 25; k++ )
 	{
@@ -698,8 +700,8 @@ void hankel( complex long double z, complex long double *h0, complex long double
 	  ib=1;
 
 	/* series expansion */
-	iz=zms;
-	miz=m[iz];
+	int iz=zms;
+	int miz=m[iz];
 	j0=CPLX_10;
 	j0p=j0;
 	y0=CPLX_00;
@@ -933,7 +935,7 @@ void rom1( int n, complex long double *sum, int nx )
 /* integrals for source and observer above ground */
 void saoa( long double t, complex long double *ans)
 {
-  long double xlr, sign;
+  long double xlr;
   static complex long double xl, dxl, cgam1, cgam2, b0, b0p, com, dgam, den1, den2;
 
   lambda(t, &xl, &dxl);
@@ -967,6 +969,7 @@ void saoa( long double t, complex long double *ans)
   xlr=xl*conj(xl);
   if(xlr >= tsmag)
   {
+	long double sign;
 	if(cimag(xl) >= 0.)
 	{
 	  xlr=creal(xl);

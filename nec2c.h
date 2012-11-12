@@ -79,8 +79,9 @@
 
 /* max length of a line read from input file */
 #define	LINE_LEN	132
+
 /* version of fortran source for the -v option */
-#define		version "nec2c 0.7"
+#define		version "nec2c 0.9"
 
 /*** Structs encapsulating global ("common") variables ***/
 /* common  /crnt/ */
@@ -524,8 +525,8 @@ void abort_on_error(int why);
 void secnds(long double *x);
 int stop(int flag);
 int load_line(char *buff, FILE *pfile);
-void mem_alloc(void **ptr, int req);
-void mem_realloc(void **ptr, int req);
+void mem_alloc(void **ptr, size_t req);
+void mem_realloc(void **ptr, size_t req);
 void free_ptr(void **ptr);
 /* network.c */
 void netwk(complex long double *cm, int *ip, complex long double *einc);

@@ -67,14 +67,14 @@ void ffld( long double thet, long double phi,
   complex long double rrh1=CPLX_00, rrv2=CPLX_00, rrh2=CPLX_00;
   complex long double tix, tiy, tiz, zscrn, ex=CPLX_00, ey=CPLX_00, ez=CPLX_00, gx, gy, gz;
 
-  phx=- sinl( phi);
+  phx= -sinl( phi);
   phy= cosl( phi);
   roz= cosl( thet);
   rozs= roz;
   thx= roz* phy;
-  thy=- roz* phx;
-  thz=- sinl( thet);
-  rox=- thz* phy;
+  thy= -roz* phx;
+  thz= -sinl( thet);
+  rox= -thz* phy;
   roy= thz* phx;
 
   jump = FALSE;
@@ -113,11 +113,11 @@ void ffld( long double thet, long double phi,
 			zrsin= csqrtl(1.- gnd.zrati2* gnd.zrati2* thz* thz);
 			rrv2=-( roz- gnd.zrati2* zrsin)/( roz+ gnd.zrati2* zrsin);
 			rrh2=( gnd.zrati2* roz- zrsin)/( gnd.zrati2* roz+ zrsin);
-			darg=- TP*2.* gnd.ch* roz;
+			darg= -TP*2.* gnd.ch* roz;
 		  }
 		} /* if( gnd.ifar > 1) */
 
-		roz=- roz;
+		roz= -roz;
 		ccx= cix;
 		ccy= ciy;
 		ccz= ciz;
@@ -306,7 +306,7 @@ void ffld( long double thet, long double phi,
   rfl=-1.;
   for( ip = 0; ip < gnd.ksymp; ip++ )
   {
-	rfl=- rfl;
+	rfl= -rfl;
 	rrz= roz* rfl;
 	fflds( rox, roy, rrz, &crnt.cur[data.n], &gx, &gy, &gz);
 
@@ -320,9 +320,9 @@ void ffld( long double thet, long double phi,
 
 	if( gnd.iperf == 1)
 	{
-	  gx=- gx;
-	  gy=- gy;
-	  gz=- gz;
+	  gx= -gx;
+	  gy= -gy;
+	  gz= -gz;
 	}
 	else
 	{
@@ -419,7 +419,7 @@ void gfld( long double rho, long double phi, long double rz,
 	  thet= PI*.5;
 
 	ffld( thet, phi, eth, epi);
-	arg=- TP* r;
+	arg= -TP* r;
 	exa= cmplx( cosl( arg), sinl( arg))/ r;
 	*eth= *eth* exa;
 	*epi= *epi* exa;
@@ -430,10 +430,10 @@ void gfld( long double rho, long double phi, long double rz,
   /* computation of space and ground waves. */
   gwav.u= ux;
   gwav.u2= gwav.u* gwav.u;
-  phx=- sinl( phi);
+  phx= -sinl( phi);
   phy= cosl( phi);
   rx= rho* phy;
-  ry=- rho* phx;
+  ry= -rho* phx;
   cix=CPLX_00;
   ciy=CPLX_00;
   ciz=CPLX_00;
@@ -482,7 +482,7 @@ void gfld( long double rho, long double phi, long double rz,
 	/* constant, sine, and cosine current distributions */
 	for( k = 0; k < 2; k++ )
 	{
-	  rfl=- rfl;
+	  rfl= -rfl;
 	  riz= rz- data.z[i]* rfl;
 	  rxyz= sqrtl( rix* rix+ riy* riy+ riz* riz);
 	  rnx= rix/ rxyz;
@@ -543,7 +543,7 @@ void gfld( long double rho, long double phi, long double rz,
 
   } /* for( i = 0; i < n; i++ ) */
 
-  arg=- TP* r;
+  arg= -TP* r;
   exa= cmplx( cosl( arg), sinl( arg));
   cix= cix* exa;
   ciy= ciy* exa;
@@ -552,8 +552,8 @@ void gfld( long double rho, long double phi, long double rz,
   rny= ry/ r;
   rnz= rz/ r;
   thx= rnz* phy;
-  thy=- rnz* phx;
-  thz=- rho/ r;
+  thy= -rnz* phx;
+  thz= -rho/ r;
   *eth= cix* thx+ ciy* thy+ ciz* thz;
   *epi= cix* phx+ ciy* phy;
   *erd= cix* rnx+ ciy* rny+ ciz* rnz;
@@ -569,7 +569,7 @@ void rdpat( void )
   char  *hpol[3] = { "LINEAR", "RIGHT ", "LEFT  " };
   char  *igtp[2] = { "----- POWER GAINS ----- ", "--- DIRECTIVE GAINS ---" };
   char  *igax[4] = { " MAJOR", " MINOR", " VERTC", " HORIZ" };
-  char *igntp[5] =  { " MAJOR AXIS", "  MINOR AXIS",
+  char *igntp[5] = { " MAJOR AXIS", "  MINOR AXIS",
 	"    VERTICAL", "  HORIZONTAL", "       TOTAL " };
 
   char *hclif=NULL, *isens;
@@ -583,7 +583,10 @@ void rdpat( void )
 
   /* Allocate memory to gain buffer */
   if( fpat.inor > 0 )
-	mem_alloc( (void *)&gain, fpat.nth*fpat.nph * sizeof(long double) );
+  {
+	size_t mreq = fpat.nth * fpat.nph * sizeof(long double);
+	mem_alloc( (void *)&gain, mreq );
+  }
 
   if( gnd.ifar > 1)
   {
@@ -706,7 +709,6 @@ void rdpat( void )
 	}
 	else
 	{
-	  prad=0.;
 	  gcon=4.* PI/(1.+ fpat.xpr6* fpat.xpr6);
 	  gcop= gcon;
 	}
@@ -777,7 +779,7 @@ void rdpat( void )
 		  stilta= sinl( tilta);
 		  tstor1= tstor1* stilta* stilta;
 		  tstor2= tstor2* stilta* cosl( tilta);
-		  emajr2=- tstor1+ tstor2+ ethm2;
+		  emajr2= -tstor1+ tstor2+ ethm2;
 		  eminr2= tstor1- tstor2+ ephm2;
 		  if( eminr2 < 0.)
 			eminr2=0.;

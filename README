@@ -155,10 +155,16 @@
   when maximum admittance matrix asymmetry printing is requested in the
   Ex card.
 
+  Version 0.9: After a bug report by David J. Singer, I changed all
+  declarations of variables that are used in memory allocations, from int
+  to size_t. This error was in the nec2c code from the beginning but
+  apparently it only showed up when extremely large memory allocations
+  are requested in nec2c.
+
   7. License:
   nec2c is Public Domain, same as the original FORTRAN source.
-  Please keep any software you write incorporating nec2c in Public Domain
-  or at least use an open license like GPL or BSD.
+  Please keep any software you write incorporating nec2c in Public
+  Domain or at least use an open license like GPL or BSD.
 
   8. AUTHOR:
 

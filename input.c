@@ -84,7 +84,7 @@ void qdsrc( int is, complex long double v, complex long double *e )
 	  if (ipr > PCHCON) dataj.ind1=2;
 	  else if( ipr < 0 )
 	  {
-		ipr=- ipr;
+		ipr= -ipr;
 		ipr--;
 		if( -data.icon1[ipr-1] != jp1 )
 		  dataj.ind1=2;
@@ -290,7 +290,7 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
 		  (line_buf[  line_idx] >  '9')) &&
 		(line_buf[  line_idx] != '+')  &&
 		(line_buf[  line_idx] != '-') )
-	  if( (line_buf[line_idx] == '\0') )
+	  if( line_buf[line_idx] == '\0' )
 	  {
 		*i1= iarr[0];
 		*i2= iarr[1];
@@ -358,7 +358,7 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
 		(line_buf[  line_idx] != '+')  &&
 		(line_buf[  line_idx] != '-')  &&
 		(line_buf[  line_idx] != '.') )
-	  if( (line_buf[line_idx] == '\0') )
+	  if( line_buf[line_idx] == '\0' )
 	  {
 		*i1= iarr[0];
 		*i2= iarr[1];

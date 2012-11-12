@@ -162,6 +162,7 @@ void couple( complex long double *cur, long double wlam )
   int j, j1, j2, l1, i, k, itt1, itt2, its1, its2, isg1, isg2, npm1;
   long double dbc, c, gmax;
   complex long double y11, y12, y22, yl, yin, zl, zin, rho;
+  size_t mreq;
 
   if( (vsorc.nsant != 1) || (vsorc.nvqd != 0) )
 	return;
@@ -172,7 +173,8 @@ void couple( complex long double *cur, long double wlam )
 
   zin= vsorc.vsant[0];
   yparm.icoup++;
-  mem_realloc( (void *)&yparm.y11a, yparm.icoup * sizeof( complex long double) );
+  mreq = yparm.icoup * sizeof( complex long double);
+  mem_realloc( (void *)&yparm.y11a, mreq );
   yparm.y11a[yparm.icoup-1]= cur[j-1]*wlam/zin;
 
   l1=(yparm.icoup-1)*(yparm.ncoup-1);
@@ -182,7 +184,8 @@ void couple( complex long double *cur, long double wlam )
 	  continue;
 
 	l1++;
-	mem_realloc( (void *)&yparm.y12a, l1 * sizeof( complex long double) );
+	mreq = l1 * sizeof( complex long double);
+	mem_realloc( (void *)&yparm.y12a, mreq );
 	k= isegno( yparm.nctag[i], yparm.ncseg[i]);
 	yparm.y12a[l1-1]= cur[k-1]* wlam/ zin;
   }
@@ -268,6 +271,7 @@ void load( int *ldtyp, int *ldtag, int *ldtagf, int *ldtagt,
 {
   int i, iwarn, istep, istepx, l1, l2, ldtags, jump, ichk;
   complex long double zt=CPLX_00, tpcj;
+  size_t mreq;
 
   tpcj = (0.0+1.883698955e+9fj);
   fprintf( output_fp, "\n"
@@ -278,7 +282,8 @@ void load( int *ldtyp, int *ldtag, int *ldtagf, int *ldtagt,
 
   /* initialize d array, used for temporary */
   /* storage of loading information. */
-  mem_realloc( (void *)&zload.zarray, data.npm * sizeof(complex long double) );
+  mreq = data.npm * sizeof(complex long double);
+  mem_realloc( (void *)&zload.zarray, mreq );
   for( i = 0; i < data.n; i++ )
 	zload.zarray[i]=CPLX_00;
 
@@ -520,7 +525,7 @@ void intrp( long double x, long double y, complex long double *f1,
   static int ix, iy, ixs=-10, iys=-10, igrs=-10, ixeg=0, iyeg=0;
   static int nxm2, nym2, nxms, nyms, nd, ndp;
   int nda[3]={11,17,9}, ndpa[3]={110,85,72};
-  int igr, iadd, iadz, i, k, jump;
+  int jump;
   static long double dx = 1., dy = 1., xs = 0., ys = 0., xz, yz;
   long double xx, yy;
   static complex long double a[4][4], b[4][4], c[4][4], d[4][4];
@@ -544,6 +549,7 @@ void intrp( long double x, long double y, complex long double *f1,
 	  (abs(iy- iys) >= 2) ||
 	  jump )
   {
+	int igr, iadd, iadz, i, k;
 	/* determine correct grid and grid region */
 	if( x <= ggrid.xsa[1])
 	  igr=0;
@@ -913,7 +919,6 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 
   jcox= data.icon1[ix];
   if( jcox > PCHCON) jcox= i;
-  jcoxx = jcox-1;
 
   jend=-1;
   iend=-1;
@@ -924,14 +929,14 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 	if( jcox != 0 )
 	{
 	  if( jcox < 0 )
-		jcox=- jcox;
+		jcox= -jcox;
 	  else
 	  {
-		sig=- sig;
-		jend=- jend;
+		sig= -sig;
+		jend= -jend;
 	  }
-
 	  jcoxx = jcox-1;
+
 	  jsno++;
 	  d= PI* data.si[jcoxx];
 	  sdh= sinl( d);
@@ -953,7 +958,7 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 	  {
 		*aa= aj/ sd* sig;
 		*bb= aj/(2.* cdh);
-		*cc=- aj/(2.* sdh)* sig;
+		*cc= -aj/(2.* sdh)* sig;
 		june= iend;
 	  }
 
@@ -979,14 +984,14 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 	  } /* if( jcox != i ) */
 	  else
 		if( jcox == is)
-		  *bb=- *bb;
+		  *bb= -*bb;
 
 	  if( iend == 1)
 		break;
 
 	} /* if( jcox != 0 ) */
 
-	pm=- pp;
+	pm= -pp;
 	pp=0.;
 	njun1= jsno;
 
@@ -1037,9 +1042,9 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 
 	if( june == 1)
 	{
-	  *aa=- *aa* qp;
+	  *aa= -*aa* qp;
 	  *bb=  *bb* qp;
-	  *cc=- *cc* qp;
+	  *cc= -*cc* qp;
 	  if( i != is)
 		return;
 	}
@@ -1090,9 +1095,9 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 	}
 	else
 	{
-	  *aa=- *aa* qp;
+	  *aa= -*aa* qp;
 	  *bb= *bb* qp;
-	  *cc=- *cc* qp;
+	  *cc= -*cc* qp;
 	}
 
 	if( i != is)
@@ -1132,11 +1137,11 @@ void tbf( int i, int icap )
 	if( jcox != 0 )
 	{
 	  if( jcox < 0 )
-		jcox=- jcox;
+		jcox= -jcox;
 	  else
 	  {
-		sig=- sig;
-		jend=- jend;
+		sig= -sig;
+		jend= -jend;
 	  }
 
 	  jcoxx = jcox-1;
@@ -1160,7 +1165,7 @@ void tbf( int i, int icap )
 	  pp= pp- omc/ sd* aj;
 	  segj.ax[jsnox]= aj/ sd* sig;
 	  segj.bx[jsnox]= aj/(2.* cdh);
-	  segj.cx[jsnox]=- aj/(2.* sdh)* sig;
+	  segj.cx[jsnox]= -aj/(2.* sdh)* sig;
 
 	  if( jcox != i)
 	  {
@@ -1183,14 +1188,14 @@ void tbf( int i, int icap )
 
 	  } /* if( jcox != i) */
 	  else
-		segj.bx[jsnox] =- segj.bx[jsnox];
+		segj.bx[jsnox] = -segj.bx[jsnox];
 
 	  if( iend == 1)
 		break;
 
 	} /* if( jcox != 0 ) */
 
-	pm=- pp;
+	pm= -pp;
 	pp=0.;
 	njun1= segj.jsno;
 
@@ -1262,9 +1267,9 @@ void tbf( int i, int icap )
 
 	for( iend = 0; iend < njun2; iend++ )
 	{
-	  segj.ax[iend]=- segj.ax[iend]* qp;
+	  segj.ax[iend]= -segj.ax[iend]* qp;
 	  segj.bx[iend]= segj.bx[iend]* qp;
-	  segj.cx[iend]=- segj.cx[iend]* qp;
+	  segj.cx[iend]= -segj.cx[iend]* qp;
 	}
 
 	segj.jsno= jsnop+1;
@@ -1318,9 +1323,9 @@ void tbf( int i, int icap )
   jend= njun1;
   for( iend = jend; iend < segj.jsno; iend++ )
   {
-	segj.ax[iend]=- segj.ax[iend]* qp;
+	segj.ax[iend]= -segj.ax[iend]* qp;
 	segj.bx[iend]= segj.bx[iend]* qp;
-	segj.cx[iend]=- segj.cx[iend]* qp;
+	segj.cx[iend]= -segj.cx[iend]* qp;
   }
 
   segj.jsno= jsnop+1;
@@ -1337,7 +1342,6 @@ void trio( int j )
   segj.jsno=0;
   jx = j-1;
   jcox= data.icon1[jx];
-  jcoxx = jcox-1;
 
   if( jcox <= PCHCON)
   {
@@ -1348,7 +1352,6 @@ void trio( int j )
   if( (jcox == 0) || (jcox > PCHCON) )
   {
 	jcox= data.icon2[jx];
-	jcoxx = jcox-1;
 
 	if( jcox <= PCHCON)
 	{
@@ -1365,10 +1368,12 @@ void trio( int j )
 	  if( segj.jsno >= segj.maxcon )
 	  {
 		segj.maxcon = segj.jsno +1;
-		mem_realloc( (void *)&segj.jco, segj.maxcon * sizeof(int) );
-		mem_realloc( (void *) &segj.ax, segj.maxcon * sizeof(long double) );
-		mem_realloc( (void *) &segj.bx, segj.maxcon * sizeof(long double) );
-		mem_realloc( (void *) &segj.cx, segj.maxcon * sizeof(long double) );
+		size_t mreq = segj.maxcon * sizeof(int);
+		mem_realloc( (void *)&segj.jco, mreq );
+		mreq = segj.maxcon * sizeof(long double);
+		mem_realloc( (void *) &segj.ax, mreq );
+		mem_realloc( (void *) &segj.bx, mreq );
+		mem_realloc( (void *) &segj.cx, mreq );
 	  }
 
 	  sbf( j, j, &segj.ax[jsnox], &segj.bx[jsnox], &segj.cx[jsnox]);
@@ -1381,9 +1386,9 @@ void trio( int j )
   do
   {
 	if( jcox < 0 )
-	  jcox=- jcox;
+	  jcox= -jcox;
 	else
-	  jend=- jend;
+	  jend= -jend;
 	jcoxx = jcox-1;
 
 	if( jcox != j)
@@ -1395,10 +1400,12 @@ void trio( int j )
 	  if( segj.jsno >= segj.maxcon )
 	  {
 		segj.maxcon = segj.jsno +1;
-		mem_realloc( (void *)&segj.jco, segj.maxcon * sizeof(int) );
-		mem_realloc( (void *) &segj.ax, segj.maxcon * sizeof(long double) );
-		mem_realloc( (void *) &segj.bx, segj.maxcon * sizeof(long double) );
-		mem_realloc( (void *) &segj.cx, segj.maxcon * sizeof(long double) );
+		size_t mreq = segj.maxcon * sizeof(int);
+		mem_realloc( (void *)&segj.jco, mreq );
+		mreq = segj.maxcon * sizeof(long double);
+		mem_realloc( (void *) &segj.ax, mreq );
+		mem_realloc( (void *) &segj.bx, mreq );
+		mem_realloc( (void *) &segj.cx, mreq );
 	  }
 
 	  sbf( jcox, j, &segj.ax[jsnox], &segj.bx[jsnox], &segj.cx[jsnox]);
@@ -1440,10 +1447,12 @@ void trio( int j )
   if( segj.jsno >= segj.maxcon )
   {
 	segj.maxcon = segj.jsno +1;
-	mem_realloc( (void *)&segj.jco, segj.maxcon * sizeof(int) );
-	mem_realloc( (void *) &segj.ax, segj.maxcon * sizeof(long double) );
-	mem_realloc( (void *) &segj.bx, segj.maxcon * sizeof(long double) );
-	mem_realloc( (void *) &segj.cx, segj.maxcon * sizeof(long double) );
+	size_t mreq = segj.maxcon * sizeof(int);
+	mem_realloc( (void *)&segj.jco, mreq );
+	mreq = segj.maxcon * sizeof(long double);
+	mem_realloc( (void *) &segj.ax, mreq );
+	mem_realloc( (void *) &segj.bx, mreq );
+	mem_realloc( (void *) &segj.cx, mreq );
   }
 
   sbf( j, j, &segj.ax[jsnox], &segj.bx[jsnox], &segj.cx[jsnox]);
@@ -1479,9 +1488,7 @@ void zint( long double sigl, long double rolam, complex long double *zint )
 #define f(d)  ( csqrtl(POT/(d))*cexpl(-cn*(d)+th(-8./x)) )
 #define g(d)  ( cexpl(cn*(d)+th(8./x))/csqrtl(TP*(d)) )
 
-  long double x, y, s, ber, bei;
-  long double tpcmu = 2.368705e+3;
-  long double cmotp = 60.00;
+  long double x, tpcmu = 2.368705e+3, cmotp = 60.00;
   complex long double br1, br2;
 
   x= sqrtl( tpcmu* sigl)* rolam;
@@ -1489,6 +1496,7 @@ void zint( long double sigl, long double rolam, complex long double *zint )
   {
 	if( x <= 8.)
 	{
+	  long double y, s, ber, bei;
 	  y= x/8.;
 	  y= y* y;
 	  s= y* y;

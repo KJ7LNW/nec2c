@@ -248,7 +248,7 @@ void sflds( long double t, complex long double *e )
   {
 	rhx= rhx/ rho;
 	rhy= rhy/ rho;
-	phx=- rhy;
+	phx= -rhy;
 	phy= rhx;
   }
 

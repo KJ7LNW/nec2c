@@ -180,8 +180,7 @@ int load_line( char *buff, FILE *pfile )
 /*------------------------------------------------------------------------*/
 
 /***  Memory allocation/freeing utils ***/
-
-void mem_alloc( void **ptr, int req )
+void mem_alloc( void **ptr, size_t req )
 {
   free_ptr( ptr );
   *ptr = malloc( req );
@@ -192,7 +191,7 @@ void mem_alloc( void **ptr, int req )
 
 /*------------------------------------------------------------------------*/
 
-void mem_realloc( void **ptr, int req )
+void mem_realloc( void **ptr, size_t req )
 {
   *ptr = realloc( *ptr, req );
   if( *ptr == NULL )

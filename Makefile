@@ -3,7 +3,7 @@
 SHELL = /bin/sh
 PROJECT = nec2c
 BINDIR  = /usr/local/bin
-CC = gcc -Wall -O2 -march=native
+CC = gcc -Wall -O2 -march=native -D_FORTIFY_CODE=2
 
 objects = calculations.o fields.o geometry.o ground.o input.o \
 	  main.o matrix.o misc.o network.o radiation.o somnec.o

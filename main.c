@@ -107,13 +107,13 @@ int main( int argc, char **argv )
   int i, j, itmp5, nthic=0, mhz=0, ifrq=0, isave=0;
 
   int
-	igox,       /* used in place of "igo" in freq loop */
-	next_job,   /* start next job (next sructure) flag */
-	idx,        /* general purpose index    */
-	ain_num,    /* ain mnemonic as a number */
-	jmp_iloop,  /* jump to input loop flag  */
-	jmp_floop=0,/* jump to freq. loop flag  */
-	mreq;       /* Size req. for malloc's   */
+	igox,        /* used in place of "igo" in freq loop */
+	next_job,    /* start next job (next sructure) flag */
+	idx,         /* general purpose index    */
+	ain_num,     /* ain mnemonic as a number */
+	jmp_iloop,   /* jump to input loop flag  */
+	jmp_floop=0; /* jump to freq. loop flag  */
+	size_t mreq; /* Size req. for malloc's   */
 
   long double *zlr, *zli, *zlc, *fnorm;
   long double *xtemp, *ytemp, *ztemp, *sitemp, *bitemp;
@@ -124,8 +124,6 @@ int main( int argc, char **argv )
   complex long double eth, eph, curi, ex, ey, ez, epsc;
 
   /* getopt() variables */
-  extern char *optarg;
-  extern int optind, opterr, optopt;
   int option;
 
   /*** signal handler related code ***/
@@ -237,9 +235,12 @@ int main( int argc, char **argv )
   Null_Pointers();
 
   /* Allocate some buffers */
-  mem_alloc( (void *)&ggrid.ar1, sizeof(complex long double)*11*10*4 );
-  mem_alloc( (void *)&ggrid.ar2, sizeof(complex long double)*17*5*4 );
-  mem_alloc( (void *)&ggrid.ar3, sizeof(complex long double)*9*8*4 );
+  mreq = sizeof(complex long double) * 11 * 10 * 4;
+  mem_alloc( (void *)&ggrid.ar1, mreq );
+  mreq = sizeof(complex long double) * 17 * 5 * 4;
+  mem_alloc( (void *)&ggrid.ar2, mreq );
+  mreq = sizeof(complex long double) * 9 * 8 * 4;
+  mem_alloc( (void *)&ggrid.ar3, mreq );
 
   /* Initialize ground grid parameters for somnec */
   ggrid.nxa[0] = 11;
@@ -480,15 +481,15 @@ int main( int argc, char **argv )
 
 			/* Reallocate loading buffers */
 			zload.nload++;
-			idx = zload.nload * sizeof(int);
-			mem_realloc( (void *)&ldtyp,  idx );
-			mem_realloc( (void *)&ldtag,  idx );
-			mem_realloc( (void *)&ldtagf, idx );
-			mem_realloc( (void *)&ldtagt, idx );
-			idx = zload.nload * sizeof(long double);
-			mem_realloc( (void *)&zlr, idx );
-			mem_realloc( (void *)&zli, idx );
-			mem_realloc( (void *)&zlc, idx );
+			mreq = zload.nload * sizeof(int);
+			mem_realloc( (void *)&ldtyp,  mreq );
+			mem_realloc( (void *)&ldtag,  mreq );
+			mem_realloc( (void *)&ldtagf, mreq );
+			mem_realloc( (void *)&ldtagt, mreq );
+			mreq = zload.nload * sizeof(long double);
+			mem_realloc( (void *)&zlr, mreq );
+			mem_realloc( (void *)&zli, mreq );
+			mem_realloc( (void *)&zlc, mreq );
 
 			idx = zload.nload-1;
 			ldtyp[idx]= itmp1;
@@ -586,10 +587,12 @@ int main( int argc, char **argv )
 			if( fpat.ixtyp == 5)
 			{
 			  vsorc.nvqd++;
-			  mem_realloc( (void *)&vsorc.ivqd, vsorc.nvqd * sizeof(int) );
-			  mem_realloc( (void *)&vsorc.iqds, vsorc.nvqd * sizeof(int) );
-			  mem_realloc( (void *)&vsorc.vqd,  vsorc.nvqd * sizeof(complex long double) );
-			  mem_realloc( (void *)&vsorc.vqds, vsorc.nvqd * sizeof(complex long double) );
+			  mreq = vsorc.nvqd * sizeof(int);
+			  mem_realloc( (void *)&vsorc.ivqd, mreq );
+			  mem_realloc( (void *)&vsorc.iqds, mreq );
+			  mreq = vsorc.nvqd * sizeof(complex long double);
+			  mem_realloc( (void *)&vsorc.vqd, mreq );
+			  mem_realloc( (void *)&vsorc.vqds, mreq );
 
 			  {
 				int indx = vsorc.nvqd-1;
@@ -609,8 +612,10 @@ int main( int argc, char **argv )
 			} /* if( fpat.ixtyp == 5) */
 
 			vsorc.nsant++;
-			mem_realloc( (void *)&vsorc.isant, vsorc.nsant * sizeof(int) );
-			mem_realloc( (void *)&vsorc.vsant, vsorc.nsant * sizeof(complex long double) );
+			mreq = vsorc.nsant * sizeof(int);
+			mem_realloc( (void *)&vsorc.isant, mreq );
+			mreq = vsorc.nsant * sizeof(complex long double);
+			mem_realloc( (void *)&vsorc.vsant, mreq );
 
 			{
 			  int indx = vsorc.nsant-1;
@@ -674,17 +679,17 @@ int main( int argc, char **argv )
 
 			/* Re-allocate network buffers */
 			netcx.nonet++;
-			idx = netcx.nonet * sizeof(int);
-			mem_realloc( (void *)&netcx.ntyp, idx );
-			mem_realloc( (void *)&netcx.iseg1, idx );
-			mem_realloc( (void *)&netcx.iseg2, idx );
-			idx = netcx.nonet * sizeof(long double);
-			mem_realloc( (void *)&netcx.x11r, idx );
-			mem_realloc( (void *)&netcx.x11i, idx );
-			mem_realloc( (void *)&netcx.x12r, idx );
-			mem_realloc( (void *)&netcx.x12i, idx );
-			mem_realloc( (void *)&netcx.x22r, idx );
-			mem_realloc( (void *)&netcx.x22i, idx );
+			mreq = netcx.nonet * sizeof(int);
+			mem_realloc( (void *)&netcx.ntyp, mreq );
+			mem_realloc( (void *)&netcx.iseg1, mreq );
+			mem_realloc( (void *)&netcx.iseg2, mreq );
+			mreq = netcx.nonet * sizeof(long double);
+			mem_realloc( (void *)&netcx.x11r, mreq );
+			mem_realloc( (void *)&netcx.x11i, mreq );
+			mem_realloc( (void *)&netcx.x12r, mreq );
+			mem_realloc( (void *)&netcx.x12i, mreq );
+			mem_realloc( (void *)&netcx.x22r, mreq );
+			mem_realloc( (void *)&netcx.x22i, mreq );
 
 			idx = netcx.nonet-1;
 			if( ain_num == 4 )
@@ -705,7 +710,7 @@ int main( int argc, char **argv )
 			  continue; /* continue card input loop */
 
 			netcx.ntyp[idx]=3;
-			netcx.x11r[idx]=- tmp1;
+			netcx.x11r[idx]= -tmp1;
 
 			continue; /* continue card input loop */
 		  }
@@ -898,8 +903,9 @@ int main( int argc, char **argv )
 			continue; /* continue card input loop */
 
 		  yparm.ncoup++;
-		  mem_realloc( (void *)&yparm.nctag, (yparm.ncoup) * sizeof(int) );
-		  mem_realloc( (void *)&yparm.ncseg, (yparm.ncoup) * sizeof(int) );
+		  mreq = (yparm.ncoup) * sizeof(int);
+		  mem_realloc( (void *)&yparm.nctag, mreq );
+		  mem_realloc( (void *)&yparm.ncseg, mreq );
 		  yparm.nctag[yparm.ncoup-1]= itmp1;
 		  yparm.ncseg[yparm.ncoup-1]= itmp2;
 
@@ -907,8 +913,9 @@ int main( int argc, char **argv )
 			continue; /* continue card input loop */
 
 		  yparm.ncoup++;
-		  mem_realloc( (void *)&yparm.nctag, (yparm.ncoup) * sizeof(int) );
-		  mem_realloc( (void *)&yparm.ncseg, (yparm.ncoup) * sizeof(int) );
+		  mreq = (yparm.ncoup) * sizeof(int);
+		  mem_realloc( (void *)&yparm.nctag, mreq );
+		  mem_realloc( (void *)&yparm.ncseg, mreq );
 		  yparm.nctag[yparm.ncoup-1]= itmp3;
 		  yparm.ncseg[yparm.ncoup-1]= itmp4;
 
@@ -972,7 +979,7 @@ int main( int argc, char **argv )
 
 	  /* Allocate to normalization buffer */
 	  {
-		int mreq1, mreq2;
+		size_t mreq1, mreq2;
 
 		mreq1 = mreq2 = 0;
 		if( iped )
@@ -1000,12 +1007,14 @@ int main( int argc, char **argv )
 	  {
 		case 1: /* label 41 */
 		  /* Memory allocation for primary interacton matrix. */
-		  iresrv = data.np2m * (data.np+2*data.mp);
-		  mem_realloc( (void *)&cm, iresrv * sizeof(complex long double) );
+		  iresrv = data.np2m * (data.np + 2 * data.mp);
+		  mreq = iresrv * sizeof(complex long double);
+		  mem_realloc( (void *)&cm, mreq );
 
 		  /* Memory allocation for symmetry array */
 		  smat.nop = netcx.neq/netcx.npeq;
-		  mem_realloc( (void *)&smat.ssx, smat.nop*smat.nop* sizeof( complex long double) );
+		  mreq = smat.nop * smat.nop * sizeof( complex long double);
+		  mem_realloc( (void *)&smat.ssx, mreq );
 
 		  mhz=1;
 
@@ -1100,7 +1109,7 @@ int main( int argc, char **argv )
 			  }
 			}
 
-			igo = 2;
+			//igo = 2;
 
 			/* label 46 */
 			case 2: /* structure segment loading */
@@ -1127,7 +1136,7 @@ int main( int argc, char **argv )
 			  if( gnd.iperf != 1)
 			  {
 				if( save.sig < 0.)
-				  save.sig=- save.sig/(59.96*data.wlam);
+				  save.sig= -save.sig/(59.96*data.wlam);
 
 				epsc= cmplx( save.epsr, -save.sig*data.wlam*59.96);
 				gnd.zrati=1./ csqrtl( epsc);
@@ -1172,7 +1181,8 @@ int main( int argc, char **argv )
 						"\n ERROR IN GROUND PARAMETERS -"
 						"\n COMPLEX DIELECTRIC CONSTANT FROM FILE IS: %12.5LE%+12.5LEj"
 						"\n                                REQUESTED: %12.5LE%+12.5LEj",
-						creall(ggrid.epscf), cimagl(ggrid.epscf), creall(epsc), cimagl(epsc) );
+						creall(ggrid.epscf), cimagl(ggrid.epscf),
+						creall(epsc), cimagl(epsc) );
 					stop(-1);
 				  }
 
@@ -1219,7 +1229,7 @@ int main( int argc, char **argv )
 				"FILL: %d msec  FACTOR: %d msec",
 				(int)tim, (int)tim2 );
 
-			igo=3;
+			//igo=3;
 			netcx.ntsol=0;
 
 			/* label 53 */
@@ -1589,8 +1599,10 @@ int main( int argc, char **argv )
 				  if( plot.iplp3 == 3)
 					fprintf( plot_fp, "%12.4LE %12.4LE\n", creall(ez), cimagl(ez) );
 				  if( plot.iplp3 == 4)
-					fprintf( plot_fp, "%12.4LE %12.4LE %12.4LE %12.4LE %12.4LE %12.4LE\n",
-						creall(ex),cimagl(ex),creall(ey),cimagl(ey),creall(ez),cimagl(ez) );
+					fprintf(
+						plot_fp, "%12.4LE %12.4LE %12.4LE %12.4LE %12.4LE %12.4LE\n",
+						creall(ex),cimagl(ex),creall(ey),
+						cimagl(ey),creall(ez),cimagl(ez) );
 
 				} /* for( i=0; i<m; i++ ) */
 

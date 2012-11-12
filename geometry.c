@@ -43,8 +43,7 @@ extern plot_t plot;
 void arc( int itg, int ns, long double rada,
 	long double ang1, long double ang2, long double rad )
 {
-  int ist, i, mreq;
-  long double ang, dang, xs1, xs2, zs1, zs2;
+  int ist;
 
   ist= data.n;
   data.n += ns;
@@ -57,8 +56,12 @@ void arc( int itg, int ns, long double rada,
 
   if( fabsl( ang2- ang1) < 360.00001)
   {
+	int i;
+	long double ang, dang, xs1, xs2, zs1, zs2;
+
 	/* Reallocate tags buffer */
-	mem_realloc( (void *)&data.itag, (data.n+data.m) * sizeof(int) );
+	size_t mreq = data.n * sizeof(int);
+	mem_realloc( (void *)&data.itag, mreq );
 
 	/* Reallocate wire buffers */
 	mreq = data.n * sizeof(long double);
@@ -110,9 +113,10 @@ void arc( int itg, int ns, long double rada,
 /* icon2 by searching for segment ends that are in contact. */
 void conect( int ignd )
 {
-  int i, iz, ic, j, jx, ix, ixx, iseg, iend, jend, nsflg, jump, ipf;
+  int i, iz, ic, j, jx, ix, ixx, iseg, iend, jend, jump, ipf;
   long double sep=0., xi1, yi1, zi1, xi2, yi2, zi2;
   long double slen, xa, ya, za, xs, ys, zs;
+  size_t mreq;
 
   segj.maxcon = 1;
 
@@ -153,8 +157,9 @@ void conect( int ignd )
   if( data.n != 0)
   {
 	/* Allocate memory to connections */
-	mem_realloc( (void *)&data.icon1, (data.n+data.m) * sizeof(int) );
-	mem_realloc( (void *)&data.icon2, (data.n+data.m) * sizeof(int) );
+	mreq = (data.n + data.m) * sizeof(int);
+	mem_realloc( (void *)&data.icon1, mreq );
+	mem_realloc( (void *)&data.icon2, mreq );
 
 	for( i = 0; i < data.n; i++ )
 	{
@@ -362,7 +367,8 @@ void conect( int ignd )
 	return;
 
   /* Allocate to connection buffers */
-  mem_realloc( (void *)&segj.jco, segj.maxcon * sizeof(int) );
+  mreq = segj.maxcon * sizeof(int);
+  mem_realloc( (void *)&segj.jco, mreq );
 
   /* adjust connected seg. ends to exactly coincide.  print junctions */
   /* of 3 or more seg.  also find old seg. connecting to new seg. */
@@ -384,8 +390,6 @@ void conect( int ignd )
 	{
 	  if( (ix != 0) && (ix != (j+1)) && (ix <= PCHCON) )
 	  {
-		nsflg=0;
-
 		do
 		{
 		  if( ix == 0 )
@@ -416,12 +420,10 @@ void conect( int ignd )
 		  if( ic >= segj.maxcon )
 		  {
 			segj.maxcon = ic+1;
-			mem_realloc( (void *)&segj.jco, segj.maxcon * sizeof(int) );
+			mreq = segj.maxcon * sizeof(int);
+			mem_realloc( (void *)&segj.jco, mreq );
 		  }
 		  segj.jco[ic-1]= ix* jend;
-
-		  if( ix > 0)
-			nsflg=1;
 
 		  ixx = ix-1;
 		  if( jend != 1)
@@ -467,7 +469,7 @@ void conect( int ignd )
 		  ix= segj.jco[i];
 		  if( ix <= 0)
 		  {
-			ix=- ix;
+			ix= -ix;
 			ixx = ix-1;
 			data.x1[ixx]= xa;
 			data.y1[ixx]= ya;
@@ -522,9 +524,10 @@ void conect( int ignd )
 
   } /* for( j = 0; j < data.n; j++ ) */
 
-  mem_realloc( (void *)&segj.ax, segj.maxcon * sizeof(long double) );
-  mem_realloc( (void *)&segj.bx, segj.maxcon * sizeof(long double) );
-  mem_realloc( (void *)&segj.cx, segj.maxcon * sizeof(long double) );
+  mreq = segj.maxcon * sizeof(long double);
+  mem_realloc( (void *)&segj.ax, mreq );
+  mem_realloc( (void *)&segj.bx, mreq );
+  mem_realloc( (void *)&segj.cx, mreq );
 
   return;
 }
@@ -540,14 +543,15 @@ void datagn( void )
 
   /* input card mnemonic list */
   /* "XT" stands for "exit", added for testing */
-#define GM_NUM  12
+  #define GM_NUM  12
   char *atst[GM_NUM] =
   {
 	"GW", "GX", "GR", "GS", "GE", "GM", \
 	  "SP", "SM", "GA", "SC", "GH", "GF"
   };
 
-  int nwire, isct, iphd, i1, i2, itg, iy, iz, mreq;
+  int nwire, isct, iphd, i1, i2, itg, iy, iz;
+  size_t mreq;
   int ix, i, ns, gm_num; /* geometry card id as a number */
   long double rad, xs1, xs2, ys1, ys2, zs1, zs2, x4=0, y4=0, z4=0;
   long double x3=0, y3=0, z3=0, xw1, xw2, yw1, yw2, zw1, zw2;
@@ -676,8 +680,9 @@ void datagn( void )
 			"\n  STRUCTURE ROTATED ABOUT Z-AXIS %d TIMES"
 			" - LABELS INCREMENTED BY %d\n", ns, itg );
 
-		ix=-1;
+		ix =-1;
 		iz = 0;
+		iy = 0;
 		reflc( ix, iy, iz, itg, ns);
 
 		continue;
@@ -1053,8 +1058,9 @@ void datagn( void )
 void helix( long double s, long double hl, long double a1, long double b1,
 	long double a2, long double b2, long double rad, int ns, int itg )
 {
-  int ist, i, mreq;
-  long double turns, zinc, copy, sangle, hdia, turn, pitch, hmaj, hmin;
+  int ist, i;
+  size_t mreq;
+  long double zinc, copy, sangle, hdia, turn, pitch, hmaj, hmin;
 
   ist= data.n;
   data.n += ns;
@@ -1065,11 +1071,11 @@ void helix( long double s, long double hl, long double a1, long double b1,
   if( ns < 1)
 	return;
 
-  turns= fabsl( hl/ s);
   zinc= fabsl( hl/ ns);
 
   /* Reallocate tags buffer */
-  mem_realloc( (void *)&data.itag, (data.n+data.m) * sizeof(int) );/*????*/
+  mreq = (data.n + data.m) * sizeof(int);
+  mem_realloc( (void *)&data.itag, mreq );
 
   /* Reallocate wire buffers */
   mreq = data.n * sizeof(long double);
@@ -1174,7 +1180,7 @@ void helix( long double s, long double hl, long double a1, long double b1,
 /* tag number itagi.  if itagi=0 segment number m is returned. */
 int isegno( int itagi, int mx)
 {
-  int icnt, i, iseg;
+  int icnt, iseg;
 
   if( mx <= 0)
   {
@@ -1193,6 +1199,7 @@ int isegno( int itagi, int mx)
 
   if( data.n > 0)
   {
+	int i;
 	for( i = 0; i < data.n; i++ )
 	{
 	  if( data.itag[i] != itagi )
@@ -1225,7 +1232,8 @@ int isegno( int itagi, int mx)
 void move( long double rox, long double roy, long double roz, long double xs,
 	long double ys, long double zs, int its, int nrpt, int itgi )
 {
-  int nrp, ix, i1, k, ir, i, ii, mreq;
+  int nrp, ix, i1, k, i;
+  size_t mreq;
   long double sps, cps, sth, cth, sph, cph, xx, xy;
   long double xz, yx, yy, yz, zx, zy, zz, xi, yi, zi;
 
@@ -1244,7 +1252,7 @@ void move( long double rox, long double roy, long double roz, long double xs,
   yx= sph* cth;
   yy= sph* sth* sps+ cph* cps;
   yz= sph* sth* cps- cph* sps;
-  zx=- sth;
+  zx= -sth;
   zy= cth* sps;
   zz= cth* cps;
 
@@ -1256,6 +1264,7 @@ void move( long double rox, long double roy, long double roz, long double xs,
   ix=1;
   if( data.n > 0)
   {
+	int ir;
 	i1= isegno( its, 1);
 	if( i1 < 1)
 	  i1= 1;
@@ -1267,11 +1276,11 @@ void move( long double rox, long double roy, long double roz, long double xs,
 	{
 	  k= data.n;
 	  /* Reallocate tags buffer */
-	  mreq = data.n+data.m + (data.n+1-i1)*nrpt;
-	  mem_realloc( (void *)&data.itag, mreq * sizeof(int) );
+	  mreq = (data.n + data.m + (data.n + 1 - i1) * nrpt) * sizeof(int);
+	  mem_realloc( (void *)&data.itag, mreq );
 
 	  /* Reallocate wire buffers */
-	  mreq = (data.n+(data.n+1-i1)*nrpt) * sizeof(long double);
+	  mreq = (data.n + (data.n + 1 - i1) * nrpt) * sizeof(long double);
 	  mem_realloc( (void *)&data.x1, mreq );
 	  mem_realloc( (void *)&data.y1, mreq );
 	  mem_realloc( (void *)&data.z1, mreq );
@@ -1315,6 +1324,7 @@ void move( long double rox, long double roy, long double roz, long double xs,
 
   if( data.m > 0)
   {
+	int ii;
 	i1 = 0;
 	if( nrpt == 0)
 	  k= 0;
@@ -1322,7 +1332,7 @@ void move( long double rox, long double roy, long double roz, long double xs,
 	  k = data.m;
 
 	/* Reallocate patch buffers */
-	mreq = data.m * (1+nrpt) * sizeof(long double);
+	mreq = data.m * (nrpt + 1) * sizeof(long double);
 	mem_realloc( (void *)&data.px, mreq );
 	mem_realloc( (void *)&data.py, mreq );
 	mem_realloc( (void *)&data.pz, mreq );
@@ -1389,9 +1399,10 @@ void patch( int nx, int ny,
 	long double ax3, long double ay3, long double az3,
 	long double ax4, long double ay4, long double az4 )
 {
-  int mi, ntp, iy, ix, mreq;
+  int mi, ntp;
+  size_t mreq;
   long double s1x=0., s1y=0., s1z=0., s2x=0., s2y=0., s2z=0., xst=0.;
-  long double znv, xnv, ynv, xa, xn2, yn2, zn2, salpn, xs, ys, zs, xt, yt, zt;
+  long double znv, xnv, ynv, xa, xn2, yn2, zn2;
 
   /* new patches.  for nx=0, ny=1,2,3,4 patch is (respectively) */
   /* arbitrary, rectagular, triangular, or quadrilateral. */
@@ -1434,7 +1445,7 @@ void patch( int nx, int ny,
 
 	if( xa >= 1.0e-6)
 	{
-	  data.t1x[mi]=- ynv/ xa;
+	  data.t1x[mi]= -ynv/ xa;
 	  data.t1y[mi]= xnv/ xa;
 	  data.t1z[mi]=0.;
 	}
@@ -1495,6 +1506,7 @@ void patch( int nx, int ny,
 	  }
 	  else
 	  {
+		long double salpn;
 		s1x= ax3- ax1;
 		s1y= ay3- ay1;
 		s1z= az3- az1;
@@ -1533,8 +1545,10 @@ void patch( int nx, int ny,
 
   if( nx != 0)
   {
-	data.m += nx*ny-1;
+	int iy, ix;
+	long double xs, ys, zs, xt, yt, zt;
 
+	data.m += nx*ny-1;
 	/* Reallocate patch buffers */
 	mreq = data.m * sizeof(long double);
 	mem_realloc( (void *)&data.px, mreq );
@@ -1598,7 +1612,8 @@ void patch( int nx, int ny,
 /*** this function was an 'entry point' (part of) 'patch()' ***/
 void subph( int nx, int ny )
 {
-  int mia, ix, iy, mi, mreq;
+  int mia, ix, iy, mi;
+  size_t mreq;
   long double xs, ys, zs, xa, xst, s1x, s1y, s1z, s2x, s2y, s2z, saln, xt, yt;
 
   /* Reallocate patch buffers */
@@ -1619,8 +1634,9 @@ void subph( int nx, int ny )
   mem_realloc( (void *)&data.t2z, mreq );
   mem_realloc( (void *)&data.pbi, mreq );
   mem_realloc( (void *)&data.psalp, mreq );
-  mem_realloc( (void *)&data.icon1, (data.n+data.m) * sizeof(int) );
-  mem_realloc( (void *)&data.icon2, (data.n+data.m) * sizeof(int) );
+  mreq = (data.n + data.m) * sizeof(int);
+  mem_realloc( (void *)&data.icon1, mreq );
+  mem_realloc( (void *)&data.icon2, mreq );
 
 
   /* Shift patches to make room for new ones */
@@ -1684,10 +1700,10 @@ void subph( int nx, int ny )
 	data.psalp[mia]= saln;
 
 	if( ix == 2)
-	  yt=- yt;
+	  yt= -yt;
 
 	if( (ix == 1) || (ix == 3) )
-	  xt=- xt;
+	  xt= -xt;
 
 	mia++;
   }
@@ -1759,7 +1775,7 @@ void readgm( char *gm, int *i1, int *i2, long double *x1, long double *y1,
 		  (line_buf[  line_idx] >  '9')) &&
 		(line_buf[  line_idx] != '+')  &&
 		(line_buf[  line_idx] != '-') )
-	  if( (line_buf[line_idx] == '\0') )
+	  if( line_buf[line_idx] == '\0' )
 	  {
 		*i1= iarr[0];
 		*i2= iarr[1];
@@ -1825,7 +1841,7 @@ void readgm( char *gm, int *i1, int *i2, long double *x1, long double *y1,
 		(line_buf[  line_idx] != '+')  &&
 		(line_buf[  line_idx] != '-')  &&
 		(line_buf[  line_idx] != '.') )
-	  if( (line_buf[line_idx] == '\0') )
+	  if( line_buf[line_idx] == '\0' )
 	  {
 		*i1= iarr[0];
 		*i2= iarr[1];
@@ -1904,7 +1920,8 @@ void readgm( char *gm, int *i1, int *i2, long double *x1, long double *y1,
 /* structure to complete a symmetric structure. */
 void reflc( int ix, int iy, int iz, int itx, int nop )
 {
-  int iti, i, nx, itagi, k, mreq;
+  int iti, i, nx, itagi, k;
+  size_t mreq;
   long double e1, e2, fnop, sam, cs, ss, xk, yk;
 
   data.np= data.n;
@@ -1927,10 +1944,11 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  if( data.n > 0 )
 	  {
 		/* Reallocate tags buffer */
-		mem_realloc( (void *)&data.itag, (2*data.n+data.m) * sizeof(int) );
+		mreq = (2 * data.n + data.m) * sizeof(int);
+		mem_realloc( (void *)&data.itag, mreq );
 
 		/* Reallocate wire buffers */
-		mreq = 2*data.n * sizeof(long double);
+		mreq = 2 * data.n * sizeof(long double);
 		mem_realloc( (void *)&data.x1, mreq );
 		mem_realloc( (void *)&data.y1, mreq );
 		mem_realloc( (void *)&data.z1, mreq );
@@ -1955,10 +1973,10 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 
 		  data.x1[nx]= data.x1[i];
 		  data.y1[nx]= data.y1[i];
-		  data.z1[nx]=- e1;
+		  data.z1[nx]= -e1;
 		  data.x2[nx]= data.x2[i];
 		  data.y2[nx]= data.y2[i];
-		  data.z2[nx]=- e2;
+		  data.z2[nx]= -e2;
 		  itagi= data.itag[i];
 
 		  if( itagi == 0)
@@ -1978,7 +1996,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  if( data.m > 0 )
 	  {
 		/* Reallocate patch buffers */
-		mreq = 2*data.m * sizeof(long double);
+		mreq = 2 * data.m * sizeof(long double);
 		mem_realloc( (void *)&data.px, mreq );
 		mem_realloc( (void *)&data.py, mreq );
 		mem_realloc( (void *)&data.pz, mreq );
@@ -2004,14 +2022,14 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 
 		  data.px[nx]= data.px[i];
 		  data.py[nx]= data.py[i];
-		  data.pz[nx]=- data.pz[i];
+		  data.pz[nx]= -data.pz[i];
 		  data.t1x[nx]= data.t1x[i];
 		  data.t1y[nx]= data.t1y[i];
-		  data.t1z[nx]=- data.t1z[i];
+		  data.t1z[nx]= -data.t1z[i];
 		  data.t2x[nx]= data.t2x[i];
 		  data.t2y[nx]= data.t2y[i];
-		  data.t2z[nx]=- data.t2z[i];
-		  data.psalp[nx]=- data.psalp[i];
+		  data.t2z[nx]= -data.t2z[i];
+		  data.psalp[nx]= -data.psalp[i];
 		  data.pbi[nx]= data.pbi[i];
 		}
 
@@ -2027,10 +2045,11 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  if( data.n > 0)
 	  {
 		/* Reallocate tags buffer */
-		mem_realloc( (void *)&data.itag, (2*data.n+data.m) * sizeof(int) );/*????*/
+		mreq = (2 * data.n + data.m) * sizeof(int);
+		mem_realloc( (void *)&data.itag, mreq );
 
 		/* Reallocate wire buffers */
-		mreq = 2*data.n * sizeof(long double);
+		mreq = 2 * data.n * sizeof(long double);
 		mem_realloc( (void *)&data.x1, mreq );
 		mem_realloc( (void *)&data.y1, mreq );
 		mem_realloc( (void *)&data.z1, mreq );
@@ -2054,10 +2073,10 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 		  }
 
 		  data.x1[nx]= data.x1[i];
-		  data.y1[nx]=- e1;
+		  data.y1[nx]= -e1;
 		  data.z1[nx]= data.z1[i];
 		  data.x2[nx]= data.x2[i];
-		  data.y2[nx]=- e2;
+		  data.y2[nx]= -e2;
 		  data.z2[nx]= data.z2[i];
 		  itagi= data.itag[i];
 
@@ -2078,7 +2097,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  if( data.m > 0 )
 	  {
 		/* Reallocate patch buffers */
-		mreq = 2*data.m * sizeof(long double);
+		mreq = 2 * data.m * sizeof(long double);
 		mem_realloc( (void *)&data.px, mreq );
 		mem_realloc( (void *)&data.py, mreq );
 		mem_realloc( (void *)&data.pz, mreq );
@@ -2103,15 +2122,15 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 		  }
 
 		  data.px[nx]= data.px[i];
-		  data.py[nx]=- data.py[i];
+		  data.py[nx]= -data.py[i];
 		  data.pz[nx]= data.pz[i];
 		  data.t1x[nx]= data.t1x[i];
-		  data.t1y[nx]=- data.t1y[i];
+		  data.t1y[nx]= -data.t1y[i];
 		  data.t1z[nx]= data.t1z[i];
 		  data.t2x[nx]= data.t2x[i];
-		  data.t2y[nx]=- data.t2y[i];
+		  data.t2y[nx]= -data.t2y[i];
 		  data.t2z[nx]= data.t2z[i];
-		  data.psalp[nx]=- data.psalp[i];
+		  data.psalp[nx]= -data.psalp[i];
 		  data.pbi[nx]= data.pbi[i];
 
 		} /* for( i = m2; i <= data.m; i++ ) */
@@ -2129,10 +2148,11 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	if( data.n > 0 )
 	{
 	  /* Reallocate tags buffer */
-	  mem_realloc( (void *)&data.itag, (2*data.n+data.m) * sizeof(int) );/*????*/
+	  mreq = (2 * data.n + data.m) * sizeof(int);
+	  mem_realloc( (void *)&data.itag, mreq );
 
 	  /* Reallocate wire buffers */
-	  mreq = 2*data.n * sizeof(long double);
+	  mreq = 2 * data.n * sizeof(long double);
 	  mem_realloc( (void *)&data.x1, mreq );
 	  mem_realloc( (void *)&data.y1, mreq );
 	  mem_realloc( (void *)&data.z1, mreq );
@@ -2155,10 +2175,10 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 		  stop(-1);
 		}
 
-		data.x1[nx]=- e1;
+		data.x1[nx]= -e1;
 		data.y1[nx]= data.y1[i];
 		data.z1[nx]= data.z1[i];
-		data.x2[nx]=- e2;
+		data.x2[nx]= -e2;
 		data.y2[nx]= data.y2[i];
 		data.z2[nx]= data.z2[i];
 		itagi= data.itag[i];
@@ -2179,7 +2199,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  return;
 
 	/* Reallocate patch buffers */
-	mreq = 2*data.m * sizeof(long double);
+	mreq = 2 * data.m * sizeof(long double);
 	mem_realloc( (void *)&data.px, mreq );
 	mem_realloc( (void *)&data.py, mreq );
 	mem_realloc( (void *)&data.pz, mreq );
@@ -2203,16 +2223,16 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 		stop(-1);
 	  }
 
-	  data.px[nx]=- data.px[i];
+	  data.px[nx]= -data.px[i];
 	  data.py[nx]= data.py[i];
 	  data.pz[nx]= data.pz[i];
-	  data.t1x[nx]=- data.t1x[i];
+	  data.t1x[nx]= -data.t1x[i];
 	  data.t1y[nx]= data.t1y[i];
 	  data.t1z[nx]= data.t1z[i];
-	  data.t2x[nx]=- data.t2x[i];
+	  data.t2x[nx]= -data.t2x[i];
 	  data.t2y[nx]= data.t2y[i];
 	  data.t2z[nx]= data.t2z[i];
-	  data.psalp[nx]=- data.psalp[i];
+	  data.psalp[nx]= -data.psalp[i];
 	  data.pbi[nx]= data.pbi[i];
 	}
 
@@ -2234,7 +2254,8 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	nx= data.np;
 
 	/* Reallocate tags buffer */
-	mem_realloc( (void *)&data.itag, (data.n+data.m) * sizeof(int) );/*????*/
+	mreq = (data.n + data.m) * sizeof(int);
+	mem_realloc( (void *)&data.itag, mreq );
 
 	/* Reallocate wire buffers */
 	mreq = data.n * sizeof(long double);
@@ -2324,7 +2345,8 @@ void wire( long double xw1, long double yw1, long double zw1,
 	long double xw2, long double yw2, long double zw2, long double rad,
 	long double rdel, long double rrad, int ns, int itg )
 {
-  int ist, i, mreq;
+  int ist, i;
+  size_t mreq;
   long double xd, yd, zd, delz, rd, fns, radz;
   long double xs1, ys1, zs1, xs2, ys2, zs2;
 
@@ -2338,7 +2360,8 @@ void wire( long double xw1, long double yw1, long double zw1,
 	return;
 
   /* Reallocate tags buffer */
-  mem_realloc( (void *)&data.itag, (data.n+data.m) * sizeof(int) );/*????*/
+  mreq = (data.n + data.m) * sizeof(int);
+  mem_realloc( (void *)&data.itag, mreq );
 
   /* Reallocate wire buffers */
   mreq = data.n * sizeof(long double);
