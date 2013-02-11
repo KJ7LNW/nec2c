@@ -23,58 +23,12 @@
 
 *******************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#  include <config.h>
+#endif
+
 #include "nec2c.h"
-
-/* common  /cmb/ */
-complex long double *cm;
-
-/* common  /crnt/ */
-crnt_t crnt;
-
-/* common  /data/ */
-data_t data;
-
-/*common  /ggrid/ */
-extern ggrid_t ggrid;
-
-/* common  /gnd/ */
-gnd_t gnd;
-
-/* common  /matpar/ */
-matpar_t matpar;
-
-/* common  /netcx/ */
-netcx_t netcx;
-
-/* common  /save/ */
-save_t save;
-
-/* common  /segj/ */
-segj_t segj;
-
-/* common  /yparm/ */
-yparm_t yparm;
-
-/* common  /zload/ */
-zload_t zload;
-
-/* common  /vsorc/ */
-vsorc_t vsorc;
-
-/* common  /fpat/ */
-fpat_t fpat;
-
-/* common  /gwav/ */
-gwav_t gwav;
-
-/* common  /plot/ */
-plot_t plot;
-
-/* common  /smat/ */
-smat_t smat;
-
-/* pointers to input/output files */
-FILE *input_fp=NULL, *output_fp=NULL, *plot_fp=NULL;
+#include "shared.h"
 
 /* signal handler */
 static void sig_handler( int signal );
@@ -86,7 +40,7 @@ int main( int argc, char **argv )
   char infile[81] = "", otfile[81] = "";
   char ain[3], line_buf[81];
 
-  /* input card mnemonic list */
+/* input card mnemonic list */
 #define NUM_CMNDS  20
   char *atst[NUM_CMNDS] =
   {
@@ -109,19 +63,18 @@ int main( int argc, char **argv )
   int
 	igox,        /* used in place of "igo" in freq loop */
 	next_job,    /* start next job (next sructure) flag */
-	idx,         /* general purpose index    */
 	ain_num,     /* ain mnemonic as a number */
 	jmp_iloop,   /* jump to input loop flag  */
 	jmp_floop=0; /* jump to freq. loop flag  */
 	size_t mreq; /* Size req. for malloc's   */
 
-  long double *zlr, *zli, *zlc, *fnorm;
-  long double *xtemp, *ytemp, *ztemp, *sitemp, *bitemp;
-  long double rkh, tmp1, delfrq=0., tmp2, tmp3, tmp4, tmp5, tmp6;
-  long double xpr1=0., xpr2=0., xpr3=0., xpr4=0., xpr5=0.;
-  long double zpnorm=0., thetis=0., phiss=0., extim;
-  long double tim1, tim, tim2, etha, fr, fr2, cmag, ph, ethm, ephm, epha;
-  complex long double eth, eph, curi, ex, ey, ez, epsc;
+  double *zlr, *zli, *zlc, *fnorm;
+  double *xtemp, *ytemp, *ztemp, *sitemp, *bitemp;
+  double rkh, tmp1, delfrq=0., tmp2, tmp3, tmp4, tmp5, tmp6;
+  double xpr1=0., xpr2=0., xpr3=0., xpr4=0., xpr5=0.;
+  double zpnorm=0., thetis=0., phiss=0., extim;
+  double tim1, tim, tim2, etha, fr, fr2, cmag, ph, ethm, ephm, epha;
+  complex double eth, eph, curi, ex, ey, ez, epsc, *cm = NULL;
 
   /* getopt() variables */
   int option;
@@ -172,7 +125,7 @@ int main( int argc, char **argv )
 		exit(0);
 
 	  case 'v' : /* print nec2c version */
-		puts( version );
+		puts( PACKAGE_STRING );
 		exit(0);
 
 	  default: /* print usage and exit */
@@ -198,7 +151,7 @@ int main( int argc, char **argv )
   if( strlen( otfile ) == 0 )
   {
 	/* strip file name extension if there is one */
-	idx = 0;
+	int idx = 0;
 	while( (infile[++idx] != '.') && (infile[idx] != '\0') );
 	infile[idx] = '\0';
 
@@ -225,21 +178,21 @@ int main( int argc, char **argv )
   /* Null local buffer pointers */
   /* type int */
   ldtyp = ldtag = ldtagf = ldtagt = NULL;
-  /* type long double */
+  /* type double */
   zlr = zli = zlc = fnorm = NULL;
   xtemp = ytemp = ztemp = sitemp = bitemp = NULL;
-  /* type complex long double */
+  /* type complex double */
   cm = NULL;
 
   /* Null global pointers */
   Null_Pointers();
 
   /* Allocate some buffers */
-  mreq = sizeof(complex long double) * 11 * 10 * 4;
+  mreq = sizeof(complex double) * 11 * 10 * 4;
   mem_alloc( (void *)&ggrid.ar1, mreq );
-  mreq = sizeof(complex long double) * 17 * 5 * 4;
+  mreq = sizeof(complex double) * 17 * 5 * 4;
   mem_alloc( (void *)&ggrid.ar2, mreq );
-  mreq = sizeof(complex long double) * 9 * 8 * 4;
+  mreq = sizeof(complex double) * 9 * 8 * 4;
   mem_alloc( (void *)&ggrid.ar3, mreq );
 
   /* Initialize ground grid parameters for somnec */
@@ -348,7 +301,8 @@ int main( int argc, char **argv )
 	iflow=1;
 
 	/* Allocate some buffers */
-	mreq = data.npm * sizeof(long double);
+	mreq = (size_t)data.npm;
+	mreq *= sizeof(double);
 	mem_realloc( (void *)&crnt.air, mreq );
 	mem_realloc( (void *)&crnt.aii, mreq );
 	mem_realloc( (void *)&crnt.bir, mreq );
@@ -361,10 +315,12 @@ int main( int argc, char **argv )
 	mem_realloc( (void *)&sitemp, mreq );
 	mem_realloc( (void *)&bitemp, mreq );
 
-	mreq = data.np2m * sizeof(int);
+	mreq = (size_t)data.np2m;
+	mreq *= sizeof(int);
 	mem_realloc( (void *)&save.ip, mreq );
 
-	mreq = data.np3m * sizeof( complex long double);
+	mreq = (size_t)data.np3m;
+	mreq *= sizeof( complex double);
 	mem_realloc( (void *)&crnt.cur, mreq );
 
 	/* Matrix parameters */
@@ -429,7 +385,7 @@ int main( int argc, char **argv )
 	  mpcnt++;
 	  fprintf( output_fp,
 		  "\n  DATA CARD No: %3d "
-		  "%s %3d %5d %5d %5d %12.5LE %12.5LE %12.5LE %12.5LE %12.5LE %12.5LE",
+		  "%s %3d %5d %5d %5d %12.5E %12.5E %12.5E %12.5E %12.5E %12.5E",
 		  mpcnt, ain, itmp1, itmp2, itmp3, itmp4,
 		  tmp1, tmp2, tmp3, tmp4, tmp5, tmp6 );
 
@@ -481,12 +437,14 @@ int main( int argc, char **argv )
 
 			/* Reallocate loading buffers */
 			zload.nload++;
-			mreq = zload.nload * sizeof(int);
+			mreq = (size_t)zload.nload;
+			mreq *= sizeof(int);
 			mem_realloc( (void *)&ldtyp,  mreq );
 			mem_realloc( (void *)&ldtag,  mreq );
 			mem_realloc( (void *)&ldtagf, mreq );
 			mem_realloc( (void *)&ldtagt, mreq );
-			mreq = zload.nload * sizeof(long double);
+			mreq = (size_t)zload.nload;
+			mreq *= sizeof(double);
 			mem_realloc( (void *)&zlr, mreq );
 			mem_realloc( (void *)&zli, mreq );
 			mem_realloc( (void *)&zlc, mreq );
@@ -587,20 +545,22 @@ int main( int argc, char **argv )
 			if( fpat.ixtyp == 5)
 			{
 			  vsorc.nvqd++;
-			  mreq = vsorc.nvqd * sizeof(int);
+			  mreq = (size_t)vsorc.nvqd;
+			  mreq *= sizeof(int);
 			  mem_realloc( (void *)&vsorc.ivqd, mreq );
 			  mem_realloc( (void *)&vsorc.iqds, mreq );
-			  mreq = vsorc.nvqd * sizeof(complex long double);
+			  mreq = (size_t)vsorc.nvqd;
+			  mreq *= sizeof(complex double);
 			  mem_realloc( (void *)&vsorc.vqd, mreq );
 			  mem_realloc( (void *)&vsorc.vqds, mreq );
 
 			  {
-				int indx = vsorc.nvqd-1;
+				int idx = vsorc.nvqd-1;
 
-				vsorc.ivqd[indx]= isegno( itmp2, itmp3);
-				vsorc.vqd[indx]= cmplx( tmp1, tmp2);
-				if( cabsl( vsorc.vqd[indx]) < 1.e-20)
-				  vsorc.vqd[indx] = CPLX_10;
+				vsorc.ivqd[idx]= isegno( itmp2, itmp3);
+				vsorc.vqd[idx]= cmplx( tmp1, tmp2);
+				if( cabs( vsorc.vqd[idx]) < 1.e-20)
+				  vsorc.vqd[idx] = CPLX_10;
 
 				iped= itmp4- netcx.masym*10;
 				zpnorm= tmp3;
@@ -612,18 +572,20 @@ int main( int argc, char **argv )
 			} /* if( fpat.ixtyp == 5) */
 
 			vsorc.nsant++;
-			mreq = vsorc.nsant * sizeof(int);
+			mreq = (size_t)vsorc.nsant;
+			mreq *= sizeof(int);
 			mem_realloc( (void *)&vsorc.isant, mreq );
-			mreq = vsorc.nsant * sizeof(complex long double);
+			mreq = (size_t)vsorc.nsant;
+			mreq *= sizeof(complex double);
 			mem_realloc( (void *)&vsorc.vsant, mreq );
 
 			{
-			  int indx = vsorc.nsant-1;
+			  int idx = vsorc.nsant-1;
 
-			  vsorc.isant[indx]= isegno( itmp2, itmp3);
-			  vsorc.vsant[indx]= cmplx( tmp1, tmp2);
-			  if( cabsl( vsorc.vsant[indx]) < 1.e-20)
-				vsorc.vsant[indx] = CPLX_10;
+			  vsorc.isant[idx]= isegno( itmp2, itmp3);
+			  vsorc.vsant[idx]= cmplx( tmp1, tmp2);
+			  if( cabs( vsorc.vsant[idx]) < 1.e-20)
+				vsorc.vsant[idx] = CPLX_10;
 
 			  iped= itmp4- netcx.masym*10;
 			  zpnorm= tmp3;
@@ -679,11 +641,13 @@ int main( int argc, char **argv )
 
 			/* Re-allocate network buffers */
 			netcx.nonet++;
-			mreq = netcx.nonet * sizeof(int);
+			mreq = (size_t)netcx.nonet;
+			mreq *= sizeof(int);
 			mem_realloc( (void *)&netcx.ntyp, mreq );
 			mem_realloc( (void *)&netcx.iseg1, mreq );
 			mem_realloc( (void *)&netcx.iseg2, mreq );
-			mreq = netcx.nonet * sizeof(long double);
+			mreq = (size_t)netcx.nonet;
+			mreq *= sizeof(double);
 			mem_realloc( (void *)&netcx.x11r, mreq );
 			mem_realloc( (void *)&netcx.x11i, mreq );
 			mem_realloc( (void *)&netcx.x12r, mreq );
@@ -903,7 +867,8 @@ int main( int argc, char **argv )
 			continue; /* continue card input loop */
 
 		  yparm.ncoup++;
-		  mreq = (yparm.ncoup) * sizeof(int);
+		  mreq = (size_t)yparm.ncoup;
+		  mreq *= sizeof(int);
 		  mem_realloc( (void *)&yparm.nctag, mreq );
 		  mem_realloc( (void *)&yparm.ncseg, mreq );
 		  yparm.nctag[yparm.ncoup-1]= itmp1;
@@ -913,7 +878,8 @@ int main( int argc, char **argv )
 			continue; /* continue card input loop */
 
 		  yparm.ncoup++;
-		  mreq = (yparm.ncoup) * sizeof(int);
+		  mreq = (size_t)yparm.ncoup;
+		  mreq *= sizeof(int);
 		  mem_realloc( (void *)&yparm.nctag, mreq );
 		  mem_realloc( (void *)&yparm.ncseg, mreq );
 		  yparm.nctag[yparm.ncoup-1]= itmp3;
@@ -983,9 +949,15 @@ int main( int argc, char **argv )
 
 		mreq1 = mreq2 = 0;
 		if( iped )
-		  mreq1 = 4*nfrq * sizeof(long double);
+		{
+		  mreq1 = (size_t)(4 * nfrq);
+		  mreq1 *= sizeof(double);
+		}
 		if( iptflg >= 2 )
-		  mreq2 = nthi*nphi * sizeof(long double);
+		{
+		  mreq2 = (size_t)(nthi * nphi);
+		  mreq2 *= sizeof(double);
+		}
 
 		if( (mreq1 > 0) || (mreq2 > 0) )
 		{
@@ -1008,12 +980,14 @@ int main( int argc, char **argv )
 		case 1: /* label 41 */
 		  /* Memory allocation for primary interacton matrix. */
 		  iresrv = data.np2m * (data.np + 2 * data.mp);
-		  mreq = iresrv * sizeof(complex long double);
+		  mreq = (size_t)iresrv;
+		  mreq *= sizeof(complex double);
 		  mem_realloc( (void *)&cm, mreq );
 
 		  /* Memory allocation for symmetry array */
 		  smat.nop = netcx.neq/netcx.npeq;
-		  mreq = smat.nop * smat.nop * sizeof( complex long double);
+		  mreq = (size_t)(smat.nop * smat.nop);
+		  mreq *= sizeof(complex double);
 		  mem_realloc( (void *)&smat.ssx, mreq );
 
 		  mhz=1;
@@ -1068,15 +1042,15 @@ int main( int argc, char **argv )
 				"                               "
 				"--------- FREQUENCY --------\n"
 				"                                "
-				"FREQUENCY :%11.4LE MHz\n"
+				"FREQUENCY :%11.4E MHz\n"
 				"                                "
-				"WAVELENGTH:%11.4LE Mtr", save.fmhz, data.wlam );
+				"WAVELENGTH:%11.4E Mtr", save.fmhz, data.wlam );
 
 			fprintf( output_fp, "\n\n"
 				"                        "
 				"APPROXIMATE INTEGRATION EMPLOYED FOR SEGMENTS \n"
 				"                        "
-				"THAT ARE MORE THAN %.3LF WAVELENGTHS APART", rkh );
+				"THAT ARE MORE THAN %.3f WAVELENGTHS APART", rkh );
 
 			if( iexk == 1)
 			  fprintf( output_fp, "\n"
@@ -1139,7 +1113,7 @@ int main( int argc, char **argv )
 				  save.sig= -save.sig/(59.96*data.wlam);
 
 				epsc= cmplx( save.epsr, -save.sig*data.wlam*59.96);
-				gnd.zrati=1./ csqrtl( epsc);
+				gnd.zrati=1./ csqrt( epsc);
 				gwav.u= gnd.zrati;
 				gwav.u2= gwav.u* gwav.u;
 
@@ -1147,8 +1121,8 @@ int main( int argc, char **argv )
 				{
 				  gnd.scrwl= save.scrwlt/ data.wlam;
 				  gnd.scrwr= save.scrwrt/ data.wlam;
-				  gnd.t1= CPLX_01*2367.067/ (long double)gnd.nradl;
-				  gnd.t2= gnd.scrwr* (long double)gnd.nradl;
+				  gnd.t1= CPLX_01*2367.067/ (double)gnd.nradl;
+				  gnd.t2= gnd.scrwr* (double)gnd.nradl;
 
 				  fprintf( output_fp, "\n"
 					  "                            "
@@ -1156,9 +1130,9 @@ int main( int argc, char **argv )
 					  "                            "
 					  "%d WIRES\n"
 					  "                            "
-					  "WIRE LENGTH: %8.2LF METERS\n"
+					  "WIRE LENGTH: %8.2f METERS\n"
 					  "                            "
-					  "WIRE RADIUS: %10.3LE METERS",
+					  "WIRE RADIUS: %10.3E METERS",
 					  gnd.nradl, save.scrwlt, save.scrwrt );
 
 				  fprintf( output_fp, "\n"
@@ -1175,14 +1149,14 @@ int main( int argc, char **argv )
 				{
 				  somnec( save.epsr, save.sig, save.fmhz );
 				  gnd.frati=( epsc-1.)/( epsc+1.);
-				  if( cabsl(( ggrid.epscf- epsc)/ epsc) >= 1.0e-3 )
+				  if( cabs(( ggrid.epscf- epsc)/ epsc) >= 1.0e-3 )
 				  {
 					fprintf( output_fp,
 						"\n ERROR IN GROUND PARAMETERS -"
-						"\n COMPLEX DIELECTRIC CONSTANT FROM FILE IS: %12.5LE%+12.5LEj"
-						"\n                                REQUESTED: %12.5LE%+12.5LEj",
-						creall(ggrid.epscf), cimagl(ggrid.epscf),
-						creall(epsc), cimagl(epsc) );
+						"\n COMPLEX DIELECTRIC CONSTANT FROM FILE IS: %12.5E%+12.5Ej"
+						"\n                                REQUESTED: %12.5E%+12.5Ej",
+						creal(ggrid.epscf), cimag(ggrid.epscf),
+						creal(epsc), cimag(epsc) );
 					stop(-1);
 				  }
 
@@ -1194,12 +1168,12 @@ int main( int argc, char **argv )
 
 				fprintf( output_fp, "\n"
 					"                            "
-					"RELATIVE DIELECTRIC CONST: %.3LF\n"
+					"RELATIVE DIELECTRIC CONST: %.3f\n"
 					"                            "
-					"CONDUCTIVITY: %10.3LE MHOS/METER\n"
+					"CONDUCTIVITY: %10.3E MHOS/METER\n"
 					"                            "
-					"COMPLEX DIELECTRIC CONSTANT: %11.4LE%+11.4LEj",
-					save.epsr, save.sig, creall(epsc), cimagl(epsc) );
+					"COMPLEX DIELECTRIC CONSTANT: %11.4E%+11.4Ej",
+					save.epsr, save.sig, creal(epsc), cimag(epsc) );
 
 			  } /* if( gnd.iperf != 1) */
 			  else
@@ -1267,8 +1241,8 @@ int main( int argc, char **argv )
 					  "      ORIENTATION (DEG)\n"
 					  "                     X          Y          Z "
 					  "      ALPHA        BETA   DIPOLE MOMENT\n"
-					  "               %10.5LF %10.5LF %10.5LF "
-					  " %7.2LF     %7.2LF    %8.3LF",
+					  "               %10.5f %10.5f %10.5f "
+					  " %7.2f     %7.2f    %8.3f",
 					  xpr1, xpr2, xpr3, xpr4, xpr5, fpat.xpr6 );
 				}
 				else
@@ -1280,8 +1254,8 @@ int main( int argc, char **argv )
 
 				  if( iptflg <= 0)
 					fprintf( output_fp,
-						"\n  PLANE WAVE - THETA: %7.2LF deg, PHI: %7.2LF deg,"
-						" ETA=%7.2LF DEG, TYPE - %s  AXIAL RATIO: %6.3LF",
+						"\n  PLANE WAVE - THETA: %7.2f deg, PHI: %7.2f deg,"
+						" ETA=%7.2f DEG, TYPE - %s  AXIAL RATIO: %6.3f",
 						xpr1, xpr2, xpr3, hpol[fpat.ixtyp-1], fpat.xpr6 );
 
 				} /* if( fpat.ixtyp == 4) */
@@ -1341,17 +1315,17 @@ int main( int argc, char **argv )
 
 					  if( (itmp2 >= 2) && (netcx.x11i[j] <= 0.) )
 					  {
-						long double xx, yy, zz;
+						double xx, yy, zz;
 
 						xx = data.x[idx5]- data.x[idx4];
 						yy = data.y[idx5]- data.y[idx4];
 						zz = data.z[idx5]- data.z[idx4];
-						netcx.x11i[j]= data.wlam* sqrtl( xx*xx + yy*yy + zz*zz );
+						netcx.x11i[j]= data.wlam* sqrt( xx*xx + yy*yy + zz*zz );
 					  }
 
 					  fprintf( output_fp, "\n"
-						  " %4d %5d %4d %5d  %11.4LE %11.4LE  "
-						  "%11.4LE %11.4LE  %11.4LE %11.4LE %s",
+						  " %4d %5d %4d %5d  %11.4E %11.4E  "
+						  "%11.4E %11.4E  %11.4E %11.4E %s",
 						  data.itag[idx4], itmp4, data.itag[idx5], itmp5,
 						  netcx.x11r[j], netcx.x11i[j], netcx.x12r[j], netcx.x12i[j],
 						  netcx.x22r[j], netcx.x22i[j], pnet[itmp2-1] );
@@ -1379,9 +1353,9 @@ int main( int argc, char **argv )
 			  {
 				itmp1= 4*( mhz-1);
 
-				fnorm[itmp1  ]= creall( netcx.zped);
-				fnorm[itmp1+1]= cimagl( netcx.zped);
-				fnorm[itmp1+2]= cabsl( netcx.zped);
+				fnorm[itmp1  ]= creal( netcx.zped);
+				fnorm[itmp1+1]= cimag( netcx.zped);
+				fnorm[itmp1+2]= cabs( netcx.zped);
 				fnorm[itmp1+3]= cang( netcx.zped);
 
 				if( iped != 2 )
@@ -1418,11 +1392,11 @@ int main( int argc, char **argv )
 						  "                        "
 						  "-------- RECEIVING PATTERN PARAMETERS --------\n"
 						  "                        "
-						  "         ETA: %7.2LF DEGREES\n"
+						  "         ETA: %7.2f DEGREES\n"
 						  "                        "
 						  "         TYPE: %s\n"
 						  "                        "
-						  "         AXIAL RATIO: %6.3LF\n\n"
+						  "         AXIAL RATIO: %6.3f\n\n"
 						  "                        "
 						  "THETA     PHI      ----- CURRENT ----    SEG\n"
 						  "                        "
@@ -1439,11 +1413,11 @@ int main( int argc, char **argv )
 				for( i = 0; i < data.n; i++ )
 				{
 				  curi= crnt.cur[i]* data.wlam;
-				  cmag= cabsl( curi);
+				  cmag= cabs( curi);
 				  ph= cang( curi);
 
-				  if( (zload.nload != 0) && (fabsl(creall(zload.zarray[i])) >= 1.e-20) )
-					fpat.ploss += 0.5* cmag* cmag* creall( zload.zarray[i])* data.si[i];
+				  if( (zload.nload != 0) && (fabs(creal(zload.zarray[i])) >= 1.e-20) )
+					fpat.ploss += 0.5* cmag* cmag* creal( zload.zarray[i])* data.si[i];
 
 				  if( iptflg == -1 )
 					continue;
@@ -1469,7 +1443,7 @@ int main( int argc, char **argv )
 					  {
 						fprintf( output_fp, "\n"
 							"                      "
-							"%7.2LF  %7.2LF   %11.4LE  %7.2LF  %5d",
+							"%7.2f  %7.2f   %11.4E  %7.2f  %5d",
 							xpr1, xpr2, cmag, ph, i+1 );
 						continue;
 					  }
@@ -1477,28 +1451,28 @@ int main( int argc, char **argv )
 					} /* if( iptflg != 0) */
 					else
 					  fprintf( output_fp, "\n"
-						  " %5d %4d %9.4LF %9.4LF %9.4LF %9.5LF"
-						  " %11.4LE %11.4LE %11.4LE %8.3LF",
+						  " %5d %4d %9.4f %9.4f %9.4f %9.5f"
+						  " %11.4E %11.4E %11.4E %8.3f",
 						  i+1, data.itag[i], data.x[i], data.y[i], data.z[i],
-						  data.si[i], creall(curi), cimagl(curi), cmag, ph );
+						  data.si[i], creal(curi), cimag(curi), cmag, ph );
 
 				  } /* if( iptflg >= 0 ) */
 				  else
 				  {
 					fprintf( output_fp, "\n"
-						" %5d %4d %9.4LF %9.4LF %9.4LF %9.5LF"
-						" %11.4LE %11.4LE %11.4LE %8.3LF",
+						" %5d %4d %9.4f %9.4f %9.4f %9.5f"
+						" %11.4E %11.4E %11.4E %8.3f",
 						i+1, data.itag[i], data.x[i], data.y[i], data.z[i],
-						data.si[i], creall(curi), cimagl(curi), cmag, ph );
+						data.si[i], creal(curi), cimag(curi), cmag, ph );
 
 					if( plot.iplp1 != 1 )
 					  continue;
 
 					if( plot.iplp2 == 1)
-					  fprintf( plot_fp, "%12.4LE %12.4LE\n", creall(curi), cimagl(curi) );
+					  fprintf( plot_fp, "%12.4E %12.4E\n", creal(curi), cimag(curi) );
 					else
 					  if( plot.iplp2 == 2)
-						fprintf( plot_fp, "%12.4LE %12.4LE\n", cmag, ph );
+						fprintf( plot_fp, "%12.4E %12.4E\n", cmag, ph );
 				  }
 
 				} /* for( i = 0; i < n; i++ ) */
@@ -1532,14 +1506,14 @@ int main( int argc, char **argv )
 					} /* if( iptflq == -2) */
 
 					curi= fr* cmplx(- crnt.bii[i], crnt.bir[i]);
-					cmag= cabsl( curi);
+					cmag= cabs( curi);
 					ph= cang( curi);
 
 					fprintf( output_fp, "\n"
-						" %5d %4d %9.4LF %9.4LF %9.4LF %9.5LF"
-						" %11.4LE %11.4LE %11.4LE %8.3LF",
+						" %5d %4d %9.4f %9.4f %9.4f %9.5f"
+						" %11.4E %11.4E %11.4E %8.3f",
 						i+1, data.itag[i], data.x[i], data.y[i], data.z[i],
-						data.si[i], creall(curi), cimagl(curi), cmag, ph );
+						data.si[i], creal(curi), cimag(curi), cmag, ph );
 
 				  } /* for( i = 0; i < n; i++ ) */
 
@@ -1577,32 +1551,32 @@ int main( int argc, char **argv )
 				  ez= crnt.cur[j+2];
 				  eth= ex* data.t1x[itmp1]+ ey* data.t1y[itmp1]+ ez* data.t1z[itmp1];
 				  eph= ex* data.t2x[itmp1]+ ey* data.t2y[itmp1]+ ez* data.t2z[itmp1];
-				  ethm= cabsl( eth);
+				  ethm= cabs( eth);
 				  etha= cang( eth);
-				  ephm= cabsl( eph);
+				  ephm= cabs( eph);
 				  epha= cang( eph);
 
 				  fprintf( output_fp, "\n"
-					  " %4d %7.3LF %7.3LF %7.3LF %11.4LE %8.2LF %11.4LE %8.2LF"
-					  " %9.2LE %9.2LE %9.2LE %9.2LE %9.2LE %9.2LE",
+					  " %4d %7.3f %7.3f %7.3f %11.4E %8.2f %11.4E %8.2f"
+					  " %9.2E %9.2E %9.2E %9.2E %9.2E %9.2E",
 					  i+1, data.px[itmp1], data.py[itmp1], data.pz[itmp1],
-					  ethm, etha, ephm, epha, creall(ex), cimagl(ex),
-					  creall(ey), cimagl(ey), creall(ez), cimagl(ez) );
+					  ethm, etha, ephm, epha, creal(ex), cimag(ex),
+					  creal(ey), cimag(ey), creal(ez), cimag(ez) );
 
 				  if( plot.iplp1 != 1)
 					continue;
 
 				  if( plot.iplp3 == 1)
-					fprintf( plot_fp, "%12.4LE %12.4LE\n", creall(ex), cimagl(ex) );
+					fprintf( plot_fp, "%12.4E %12.4E\n", creal(ex), cimag(ex) );
 				  if( plot.iplp3 == 2)
-					fprintf( plot_fp, "%12.4LE %12.4LE\n", creall(ey), cimagl(ey) );
+					fprintf( plot_fp, "%12.4E %12.4E\n", creal(ey), cimag(ey) );
 				  if( plot.iplp3 == 3)
-					fprintf( plot_fp, "%12.4LE %12.4LE\n", creall(ez), cimagl(ez) );
+					fprintf( plot_fp, "%12.4E %12.4E\n", creal(ez), cimag(ez) );
 				  if( plot.iplp3 == 4)
 					fprintf(
-						plot_fp, "%12.4LE %12.4LE %12.4LE %12.4LE %12.4LE %12.4LE\n",
-						creall(ex),cimagl(ex),creall(ey),
-						cimagl(ey),creall(ez),cimagl(ez) );
+						plot_fp, "%12.4E %12.4E %12.4E %12.4E %12.4E %12.4E\n",
+						creal(ex),cimag(ex),creal(ey),
+						cimag(ey),creal(ez),cimag(ez) );
 
 				} /* for( i=0; i<m; i++ ) */
 
@@ -1617,15 +1591,15 @@ int main( int argc, char **argv )
 					"                               "
 					"---------- POWER BUDGET ---------\n"
 					"                               "
-					"INPUT POWER   = %11.4LE Watts\n"
+					"INPUT POWER   = %11.4E Watts\n"
 					"                               "
-					"RADIATED POWER= %11.4LE Watts\n"
+					"RADIATED POWER= %11.4E Watts\n"
 					"                               "
-					"STRUCTURE LOSS= %11.4LE Watts\n"
+					"STRUCTURE LOSS= %11.4E Watts\n"
 					"                               "
-					"NETWORK LOSS  = %11.4LE Watts\n"
+					"NETWORK LOSS  = %11.4E Watts\n"
 					"                               "
-					"EFFICIENCY    = %7.2LF Percent",
+					"EFFICIENCY    = %7.2f Percent",
 					netcx.pin, tmp1, fpat.ploss, netcx.pnls, tmp2 );
 
 			  } /* if( (fpat.ixtyp == 0) || (fpat.ixtyp == 5) ) */
@@ -1764,12 +1738,12 @@ int main( int argc, char **argv )
 				  "                     "
 				  "---- NORMALIZED RECEIVING PATTERN ----\n"
 				  "                      "
-				  "NORMALIZATION FACTOR: %11.4LE\n"
+				  "NORMALIZATION FACTOR: %11.4E\n"
 				  "                      "
-				  "ETA: %7.2LF DEGREES\n"
+				  "ETA: %7.2f DEGREES\n"
 				  "                      "
 				  "TYPE: %s\n"
-				  "                      AXIAL RATIO: %6.3LF\n"
+				  "                      AXIAL RATIO: %6.3f\n"
 				  "                      SEGMENT No: %d\n\n"
 				  "                      "
 				  "THETA     PHI       ---- PATTERN ----\n"
@@ -1791,7 +1765,7 @@ int main( int argc, char **argv )
 					tmp3= db20( tmp2);
 
 					fprintf( output_fp, "\n"
-						"                    %7.2LF  %7.2LF   %7.2LF  %11.4LE",
+						"                    %7.2f  %7.2f   %7.2f  %11.4E",
 						xpr1, xpr2, tmp3, tmp2 );
 
 					xpr1 += xpr4;
@@ -1840,7 +1814,7 @@ int main( int argc, char **argv )
 				"                                     "
 				" SOURCE SEGMENT No: %d\n"
 				"                                  "
-				" NORMALIZATION FACTOR:%12.5LE\n\n"
+				" NORMALIZATION FACTOR:%12.5E\n\n"
 				"              ----------- UNNORMALIZED IMPEDANCE ----------  "
 				"  ------------ NORMALIZED IMPEDANCE -----------\n"
 				"      FREQ    RESISTANCE    REACTANCE    MAGNITUDE    PHASE  "
@@ -1854,7 +1828,7 @@ int main( int argc, char **argv )
 			  tmp1= save.fmhz-( nfrq-1)* delfrq;
 			else
 			  if( ifrq == 1)
-				tmp1= save.fmhz/( powl(delfrq, (nfrq-1)) );
+				tmp1= save.fmhz/( pow(delfrq, (nfrq-1)) );
 
 			for( i = 0; i < itmp1; i++ )
 			{
@@ -1865,8 +1839,8 @@ int main( int argc, char **argv )
 			  tmp5= fnorm[itmp2+3];
 
 			  fprintf( output_fp, "\n"
-				  " %9.3LF   %11.4LE  %11.4LE  %11.4LE  %7.2LF  "
-				  " %11.4LE  %11.4LE  %11.4LE  %7.2LF",
+				  " %9.3f   %11.4E  %11.4E  %11.4E  %7.2f  "
+				  " %11.4E  %11.4E  %11.4E  %7.2f",
 				  tmp1, fnorm[itmp2], fnorm[itmp2+1], fnorm[itmp2+2],
 				  fnorm[itmp2+3], tmp2, tmp3, tmp4, tmp5 );
 
@@ -1890,8 +1864,6 @@ int main( int argc, char **argv )
 	} /* while( ! next_job ): Main input section (l_14) */
 
   } /* while(TRUE): Main execution loop (l_1) */
-
-  return(0);
 
 } /* end of main() */
 
@@ -1945,14 +1917,14 @@ Null_Pointers( void )
 /*-----------------------------------------------------------------------*/
 
 /* prnt sets up the print formats for impedance loading */
-void prnt( int in1, int in2, int in3, long double fl1, long double fl2,
-		   long double fl3, long double fl4, long double fl5,
-		   long double fl6, char *ia, int ichar )
+void prnt( int in1, int in2, int in3, double fl1, double fl2,
+		   double fl3, double fl4, double fl5,
+		   double fl6, char *ia, int ichar )
 {
   /* record to be output and buffer used to make it */
-  char record[101+ichar*4], buff[15];
+  char record[101+ichar*4], buff[16];
   int in[3], i1, i;
-  long double fl[6];
+  double fl[6];
 
   in[0]= in1;
   in[1]= in2;
@@ -1988,9 +1960,9 @@ void prnt( int in1, int in2, int in3, long double fl1, long double fl2,
   /* floating point format */
   for( i = 0; i < 6; i++ )
   {
-	if( fabsl( fl[i]) >= 1.0e-20 )
+	if( fabs( fl[i]) >= 1.0e-20 )
 	{
-	  snprintf( buff, 15, " %11.4LE", fl[i] );
+	  snprintf( buff, 15, " %11.4E", fl[i] );
 	  strcat( record, buff );
 	}
 	else

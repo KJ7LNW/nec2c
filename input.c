@@ -24,33 +24,16 @@
 *******************************************************************/
 
 #include "nec2c.h"
-
-/* common  /data/ */
-extern data_t data;
-
-/* common  /segj/ */
-extern segj_t segj;
-
-/* common  /vsorc/ */
-extern vsorc_t vsorc;
-
-/* common  /dataj/ */
-extern dataj_t dataj;
-
-/* common  /zload/ */
-extern zload_t zload;
-
-/* pointers to input/output files */
-extern FILE *input_fp, *output_fp, *plot_fp;
+#include "shared.h"
 
 /*-------------------------------------------------------------------*/
 
 /* fill incident field array for charge discontinuity voltage source */
-void qdsrc( int is, complex long double v, complex long double *e )
+void qdsrc( int is, complex double v, complex double *e )
 {
   int i, jx, j, jp1, ipr, ij, i1;
-  long double xi, yi, zi, ai, cabi, sabi, salpi, tx, ty, tz;
-  complex long double curd, etk, ets, etc;
+  double xi, yi, zi, ai, cabi, sabi, salpi, tx, ty, tz;
+  complex double curd, etk, ets, etc;
 
   is--;
   i= data.icon1[is];
@@ -58,8 +41,8 @@ void qdsrc( int is, complex long double v, complex long double *e )
   tbf( is+1,0);
   data.icon1[is]= i;
   dataj.s= data.si[is]*.5;
-  curd= CCJ* v/(( logl(2.* dataj.s/ data.bi[is])-1.)*( segj.bx[segj.jsno-1]*
-		cosl( TP* dataj.s)+ segj.cx[segj.jsno-1]* sinl( TP* dataj.s))* data.wlam);
+  curd= CCJ* v/(( log(2.* dataj.s/ data.bi[is])-1.)*( segj.bx[segj.jsno-1]*
+		cos( TP* dataj.s)+ segj.cx[segj.jsno-1]* sin( TP* dataj.s))* data.wlam);
   vsorc.vqds[vsorc.nqds]= v;
   vsorc.iqds[vsorc.nqds]= is+1;
   vsorc.nqds++;
@@ -90,9 +73,9 @@ void qdsrc( int is, complex long double v, complex long double *e )
 		  dataj.ind1=2;
 		else
 		{
-		  xi= fabsl( dataj.cabj* data.cab[ipr]+ dataj.sabj*
+		  xi= fabs( dataj.cabj* data.cab[ipr]+ dataj.sabj*
 			  data.sab[ipr]+ dataj.salpj* data.salp[ipr]);
-		  if( (xi < 0.999999) || (fabsl(data.bi[ipr]/dataj.b-1.) > 1.0e-6) )
+		  if( (xi < 0.999999) || (fabs(data.bi[ipr]/dataj.b-1.) > 1.0e-6) )
 			dataj.ind1=2;
 		  else
 			dataj.ind1=0;
@@ -110,9 +93,9 @@ void qdsrc( int is, complex long double v, complex long double *e )
 			  dataj.ind1=2;
 			else
 			{
-			  xi= fabsl( dataj.cabj* data.cab[ipr]+ dataj.sabj*
+			  xi= fabs( dataj.cabj* data.cab[ipr]+ dataj.sabj*
 				  data.sab[ipr]+ dataj.salpj* data.salp[ipr]);
-			  if( (xi < 0.999999) || (fabsl(data.bi[ipr]/dataj.b-1.) > 1.0e-6) )
+			  if( (xi < 0.999999) || (fabs(data.bi[ipr]/dataj.b-1.) > 1.0e-6) )
 				dataj.ind1=2;
 			  else
 				dataj.ind1=0;
@@ -137,9 +120,9 @@ void qdsrc( int is, complex long double v, complex long double *e )
 		  dataj.ind1=2;
 		else
 		{
-		  xi= fabsl( dataj.cabj* data.cab[ipr]+ dataj.sabj*
+		  xi= fabs( dataj.cabj* data.cab[ipr]+ dataj.sabj*
 			  data.sab[ipr]+ dataj.salpj* data.salp[ipr]);
-		  if( (xi < 0.999999) || (fabsl(data.bi[ipr]/dataj.b-1.) > 1.0e-6) )
+		  if( (xi < 0.999999) || (fabs(data.bi[ipr]/dataj.b-1.) > 1.0e-6) )
 			dataj.ind1=2;
 		  else
 			dataj.ind1=0;
@@ -157,9 +140,9 @@ void qdsrc( int is, complex long double v, complex long double *e )
 			  dataj.ind2=2;
 			else
 			{
-			  xi= fabsl( dataj.cabj* data.cab[ipr]+ dataj.sabj*
+			  xi= fabs( dataj.cabj* data.cab[ipr]+ dataj.sabj*
 				  data.sab[ipr]+ dataj.salpj* data.salp[ipr]);
-			  if( (xi < 0.999999) || (fabsl(data.bi[ipr]/dataj.b-1.) > 1.0e-6) )
+			  if( (xi < 0.999999) || (fabs(data.bi[ipr]/dataj.b-1.) > 1.0e-6) )
 				dataj.ind2=2;
 			  else
 				dataj.ind2=0;
@@ -235,20 +218,20 @@ void qdsrc( int is, complex long double v, complex long double *e )
 /*-----------------------------------------------------------------------*/
 
 void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
-	long double *f1, long double *f2, long double *f3,
-	long double *f4, long double *f5, long double *f6 )
+	double *f1, double *f2, double *f3,
+	double *f4, double *f5, double *f6 )
 {
   char line_buf[134];
   int nlin, i, line_idx;
   int nint = 4, nflt = 6;
   int iarr[4] = { 0, 0, 0, 0 };
-  long double rarr[6] = { 0., 0., 0., 0., 0., 0. };
+  double rarr[6] = { 0., 0., 0., 0., 0., 0. };
 
   /* read a line from input file */
   load_line( line_buf, input_fp );
 
   /* get line length */
-  nlin= strlen( line_buf );
+  nlin= (int)strlen( line_buf );
 
   /* abort if card's mnemonic too short or missing */
   if( nlin < 2 )
@@ -349,7 +332,7 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
 
   } /* for( i = 0; i < nint; i++ ) */
 
-  /* read long doubles from line */
+  /* read doubles from line */
   for( i = 0; i < nflt; i++ )
   {
 	/* Find first numerical character */
@@ -373,7 +356,7 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
 		return;
 	  }
 
-	/* read a long double from line */
+	/* read a double from line */
 	rarr[i] = atof( &line_buf[line_idx] );
 
 	/* traverse numerical field to next ' ' or ',' */

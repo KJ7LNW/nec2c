@@ -24,24 +24,13 @@
  *******************************************************************/
 
 #include "nec2c.h"
-
-/* common  /data/ */
-extern data_t data;
-
-/* common  /segj/ */
-extern segj_t segj;
-
-/* pointers to input/output files */
-extern FILE *input_fp, *output_fp, *plot_fp;
-
-/* common  /plot/ */
-extern plot_t plot;
+#include "shared.h"
 
 /*-------------------------------------------------------------------*/
 
 /* arc generates segment geometry data for an arc of ns segments */
-void arc( int itg, int ns, long double rada,
-	long double ang1, long double ang2, long double rad )
+void arc( int itg, int ns, double rada,
+	double ang1, double ang2, double rad )
 {
   int ist;
 
@@ -54,17 +43,19 @@ void arc( int itg, int ns, long double rada,
   if( ns < 1)
 	return;
 
-  if( fabsl( ang2- ang1) < 360.00001)
+  if( fabs( ang2- ang1) < 360.00001)
   {
 	int i;
-	long double ang, dang, xs1, xs2, zs1, zs2;
+	double ang, dang, xs1, xs2, zs1, zs2;
 
 	/* Reallocate tags buffer */
-	size_t mreq = data.n * sizeof(int);
+	size_t mreq = (size_t)data.n;
+	mreq *= sizeof(int);
 	mem_realloc( (void *)&data.itag, mreq );
 
 	/* Reallocate wire buffers */
-	mreq = data.n * sizeof(long double);
+	mreq = (size_t)data.n;
+	mreq *= sizeof(double);
 	mem_realloc( (void *)&data.x1, mreq );
 	mem_realloc( (void *)&data.y1, mreq );
 	mem_realloc( (void *)&data.z1, mreq );
@@ -75,14 +66,14 @@ void arc( int itg, int ns, long double rada,
 
 	ang= ang1* TA;
 	dang=( ang2- ang1)* TA/ ns;
-	xs1= rada* cosl( ang);
-	zs1= rada* sinl( ang);
+	xs1= rada* cos( ang);
+	zs1= rada* sin( ang);
 
 	for( i = ist; i < data.n; i++ )
 	{
 	  ang += dang;
-	  xs2= rada* cosl( ang);
-	  zs2= rada* sinl( ang);
+	  xs2= rada* cos( ang);
+	  zs2= rada* sin( ang);
 	  data.x1[i]= xs1;
 
 	  data.y1[i]=0.;
@@ -97,7 +88,7 @@ void arc( int itg, int ns, long double rada,
 
 	} /* for( i = ist; i < data.n; i++ ) */
 
-  } /* if( fabsl( ang2- ang1) < 360.00001) */
+  } /* if( fabs( ang2- ang1) < 360.00001) */
   else
   {
 	fprintf( output_fp, "\n  ERROR -- ARC ANGLE EXCEEDS 360 DEGREES");
@@ -114,8 +105,8 @@ void arc( int itg, int ns, long double rada,
 void conect( int ignd )
 {
   int i, iz, ic, j, jx, ix, ixx, iseg, iend, jend, jump, ipf;
-  long double sep=0., xi1, yi1, zi1, xi2, yi2, zi2;
-  long double slen, xa, ya, za, xs, ys, zs;
+  double sep=0., xi1, yi1, zi1, xi2, yi2, zi2;
+  double slen, xa, ya, za, xs, ys, zs;
   size_t mreq;
 
   segj.maxcon = 1;
@@ -157,7 +148,8 @@ void conect( int ignd )
   if( data.n != 0)
   {
 	/* Allocate memory to connections */
-	mreq = (data.n + data.m) * sizeof(int);
+	mreq = (size_t)(data.n + data.m);
+	mreq *= sizeof(int);
 	mem_realloc( (void *)&data.icon1, mreq );
 	mem_realloc( (void *)&data.icon2, mreq );
 
@@ -171,7 +163,7 @@ void conect( int ignd )
 	  xi2= data.x2[i];
 	  yi2= data.y2[i];
 	  zi2= data.z2[i];
-	  slen= sqrtl( (xi2- xi1)*(xi2- xi1) + (yi2- yi1) *
+	  slen= sqrt( (xi2- xi1)*(xi2- xi1) + (yi2- yi1) *
 		  (yi2- yi1) + (zi2- zi1)*(zi2- zi1) ) * SMIN;
 
 	  /* determine connection data for end 1 of segment. */
@@ -205,14 +197,14 @@ void conect( int ignd )
 		  if( ic >= data.n)
 			ic=0;
 
-		  sep= fabsl( xi1- data.x1[ic])+ fabsl(yi1- data.y1[ic])+ fabsl(zi1- data.z1[ic]);
+		  sep= fabs( xi1- data.x1[ic])+ fabs(yi1- data.y1[ic])+ fabs(zi1- data.z1[ic]);
 		  if( sep <= slen)
 		  {
 			data.icon1[i]= -(ic+1);
 			break;
 		  }
 
-		  sep= fabsl( xi1- data.x2[ic])+ fabsl(yi1- data.y2[ic])+ fabsl(zi1- data.z2[ic]);
+		  sep= fabs( xi1- data.x2[ic])+ fabs(yi1- data.y2[ic])+ fabs(zi1- data.z2[ic]);
 		  if( sep <= slen)
 		  {
 			data.icon1[i]= (ic+1);
@@ -259,14 +251,14 @@ void conect( int ignd )
 		if( ic >= data.n)
 		  ic=0;
 
-		sep= fabsl(xi2- data.x1[ic])+ fabsl(yi2- data.y1[ic])+ fabsl(zi2- data.z1[ic]);
+		sep= fabs(xi2- data.x1[ic])+ fabs(yi2- data.y1[ic])+ fabs(zi2- data.z1[ic]);
 		if( sep <= slen)
 		{
 		  data.icon2[i]= (ic+1);
 		  break;
 		}
 
-		sep= fabsl(xi2- data.x2[ic])+ fabsl(yi2- data.y2[ic])+ fabsl(zi2- data.z2[ic]);
+		sep= fabs(xi2- data.x2[ic])+ fabs(yi2- data.y2[ic])+ fabs(zi2- data.z2[ic]);
 		if( sep <= slen)
 		{
 		  data.icon2[i]= -(ic+1);
@@ -299,8 +291,8 @@ void conect( int ignd )
 		  zi2= data.z2[iseg];
 
 		  /* for first end of segment */
-		  slen=( fabsl(xi2- xi1)+ fabsl(yi2- yi1)+ fabsl(zi2- zi1))* SMIN;
-		  sep= fabsl(xi1- xs)+ fabsl(yi1- ys)+ fabsl(zi1- zs);
+		  slen=( fabs(xi2- xi1)+ fabs(yi2- yi1)+ fabs(zi2- zi1))* SMIN;
+		  sep= fabs(xi1- xs)+ fabs(yi1- ys)+ fabs(zi1- zs);
 
 		  /* connection - divide patch into 4 patches at present array loc. */
 		  if( sep <= slen)
@@ -311,7 +303,7 @@ void conect( int ignd )
 			break;
 		  }
 
-		  sep= fabsl(xi2- xs)+ fabsl(yi2- ys)+ fabsl(zi2- zs);
+		  sep= fabs(xi2- xs)+ fabs(yi2- ys)+ fabs(zi2- zs);
 		  if( sep <= slen)
 		  {
 			data.icon2[iseg]=PCHCON+ i;
@@ -367,7 +359,8 @@ void conect( int ignd )
 	return;
 
   /* Allocate to connection buffers */
-  mreq = segj.maxcon * sizeof(int);
+  mreq = (size_t)segj.maxcon;
+  mreq *= sizeof(int);
   mem_realloc( (void *)&segj.jco, mreq );
 
   /* adjust connected seg. ends to exactly coincide.  print junctions */
@@ -420,7 +413,8 @@ void conect( int ignd )
 		  if( ic >= segj.maxcon )
 		  {
 			segj.maxcon = ic+1;
-			mreq = segj.maxcon * sizeof(int);
+			mreq = (size_t)segj.maxcon;
+			mreq *= sizeof(int);
 			mem_realloc( (void *)&segj.jco, mreq );
 		  }
 		  segj.jco[ic-1]= ix* jend;
@@ -459,7 +453,7 @@ void conect( int ignd )
 			continue;
 		  }
 
-		sep= (long double)ic;
+		sep= (double)ic;
 		xa= xa/ sep;
 		ya= ya/ sep;
 		za= za/ sep;
@@ -524,7 +518,8 @@ void conect( int ignd )
 
   } /* for( j = 0; j < data.n; j++ ) */
 
-  mreq = segj.maxcon * sizeof(long double);
+  mreq = (size_t)segj.maxcon;
+  mreq *= sizeof(double);
   mem_realloc( (void *)&segj.ax, mreq );
   mem_realloc( (void *)&segj.bx, mreq );
   mem_realloc( (void *)&segj.cx, mreq );
@@ -553,9 +548,9 @@ void datagn( void )
   int nwire, isct, iphd, i1, i2, itg, iy, iz;
   size_t mreq;
   int ix, i, ns, gm_num; /* geometry card id as a number */
-  long double rad, xs1, xs2, ys1, ys2, zs1, zs2, x4=0, y4=0, z4=0;
-  long double x3=0, y3=0, z3=0, xw1, xw2, yw1, yw2, zw1, zw2;
-  long double dummy;
+  double rad, xs1, xs2, ys1, ys2, zs1, zs2, x4=0, y4=0, z4=0;
+  double x3=0, y3=0, z3=0, xw1, xw2, yw1, yw2, zw1, zw2;
+  double dummy;
 
   data.ipsym=0;
   nwire=0;
@@ -610,11 +605,11 @@ void datagn( void )
 		i2= data.n+ ns;
 
 		fprintf( output_fp, "\n"
-			" %5d  %10.4LF %10.4LF %10.4LF %10.4LF"
-			" %10.4LF %10.4LF %10.4LF %5d %5d %5d %4d",
+			" %5d  %10.5f %10.5f %10.5f %10.5f"
+			" %10.5f %10.5f %10.5f %5d %5d %5d %4d",
 			nwire, xw1, yw1, zw1, xw2, yw2, zw2, rad, ns, i1, i2, itg );
 
-		if( rad != 0)
+		if( rad != 0.0 )
 		{
 		  xs1=1.;
 		  ys1=1.;
@@ -631,18 +626,18 @@ void datagn( void )
 		  }
 
 		  fprintf( output_fp,
-			  "\n  ABOVE WIRE IS TAPERED.  SEGMENT LENGTH RATIO: %9.5LF\n"
+			  "\n  ABOVE WIRE IS TAPERED.  SEGMENT LENGTH RATIO: %9.5f\n"
 			  "                                 "
-			  "RADIUS FROM: %9.5LF TO: %9.5LF", xs1, ys1, zs1 );
+			  "RADIUS FROM: %9.5f TO: %9.5f", xs1, ys1, zs1 );
 
-		  if( (ys1 == 0) || (zs1 == 0) )
+		  if( (ys1 == 0.0) || (zs1 == 0.0) )
 		  {
 			fprintf( output_fp, "\n  GEOMETRY DATA CARD ERROR" );
 			stop(-1);
 		  }
 
 		  rad= ys1;
-		  ys1= powl( (zs1/ys1), (1./(ns-1.)) );
+		  ys1= pow( (zs1/ys1), (1./(ns-1.)) );
 		}
 
 		wire( xw1, yw1, zw1, xw2, yw2, zw2, rad, xs1, ys1, ns, itg);
@@ -666,8 +661,8 @@ void datagn( void )
 		  iz=1;
 
 		fprintf( output_fp,
-			"\n  STRUCTURE REFLECTED ALONG THE AXES %c %c %c"
-			" - TAGS INCREMENTED BY %d\n",
+			"\n      STRUCTURE REFLECTED ALONG THE AXES %c %c %c"
+			" - TAGS INCREMENTED BY %d",
 			ifx[ix], ify[iy], ifz[iz], itg );
 
 		reflc( ix, iy, iz, itg, ns);
@@ -678,7 +673,7 @@ void datagn( void )
 
 		fprintf( output_fp,
 			"\n  STRUCTURE ROTATED ABOUT Z-AXIS %d TIMES"
-			" - LABELS INCREMENTED BY %d\n", ns, itg );
+			" - LABELS INCREMENTED BY %d", ns, itg );
 
 		ix =-1;
 		iz = 0;
@@ -716,7 +711,7 @@ void datagn( void )
 		} /* if( data.m >= m2) */
 
 		fprintf( output_fp,
-			"\n     STRUCTURE SCALED BY FACTOR: %10.5LF", xw1 );
+			"\n     STRUCTURE SCALED BY FACTOR: %10.5f", xw1 );
 
 		continue;
 
@@ -733,7 +728,8 @@ void datagn( void )
 		if( data.n != 0)
 		{
 		  /* Allocate wire buffers */
-		  mreq = data.n * sizeof(long double);
+		  mreq = (size_t)data.n;
+		  mreq *= sizeof(double);
 		  mem_realloc( (void *)&data.si, mreq );
 		  mem_realloc( (void *)&data.sab, mreq );
 		  mem_realloc( (void *)&data.cab, mreq );
@@ -765,7 +761,7 @@ void datagn( void )
 			data.y[i]=( data.y1[i]+ data.y2[i])/2.;
 			data.z[i]=( data.z1[i]+ data.z2[i])/2.;
 			xw2= xw1* xw1+ yw1* yw1+ zw1* zw1;
-			yw2= sqrtl( xw2);
+			yw2= sqrt( xw2);
 			yw2=( xw2/ yw2+ yw2)*.5;
 			data.si[i]= yw2;
 			data.cab[i]= xw1/ yw2;
@@ -778,18 +774,18 @@ void datagn( void )
 			  xw2=-1.;
 
 			data.salp[i]= xw2;
-			xw2= asinl( xw2)* TD;
-			yw2= atan2l( yw1, xw1)* TD;
+			xw2= asin( xw2)* TD;
+			yw2= atan2( yw1, xw1)* TD;
 
 			fprintf( output_fp, "\n"
-				" %5d %9.4LF %9.4LF %9.4LF %9.4LF"
-				" %9.4LF %9.4LF %9.4LF %5d %5d %5d %5d",
+				" %5d %9.4f %9.4f %9.4f %9.4f"
+				" %9.4f %9.4f %9.4f %5d %5d %5d %5d",
 				i+1, data.x[i], data.y[i], data.z[i], data.si[i], xw2, yw2,
 				data.bi[i], data.icon1[i], i+1, data.icon2[i], data.itag[i] );
 
 			if( plot.iplp1 == 1)
-			  fprintf( plot_fp, "%12.4LE %12.4LE %12.4LE "
-				  "%12.4LE %12.4LE %12.4LE %12.4LE %5d %5d %5d\n",
+			  fprintf( plot_fp, "%12.4E %12.4E %12.4E "
+				  "%12.4E %12.4E %12.4E %12.4E %5d %5d %5d\n",
 				  data.x[i],data.y[i],data.z[i],data.si[i],xw2,yw2,
 				  data.bi[i],data.icon1[i],i+1,data.icon2[i] );
 
@@ -822,8 +818,8 @@ void datagn( void )
 			zw1=( data.t1x[i]* data.t2y[i]- data.t1y[i]* data.t2x[i])* data.psalp[i];
 
 			fprintf( output_fp, "\n"
-				" %4d %10.5LF %10.5LF %10.5LF  %8.4LF %8.4LF %8.4LF"
-				" %10.5LF  %8.4LF %8.4LF %8.4LF  %8.4LF %8.4LF %8.4LF",
+				" %4d %10.5f %10.5f %10.5f  %8.4f %8.4f %8.4f"
+				" %10.5f  %8.4f %8.4f %8.4f  %8.4f %8.4f %8.4f",
 				i+1, data.px[i], data.py[i], data.pz[i], xw1, yw1, zw1, data.pbi[i],
 				data.t1x[i], data.t1y[i], data.t1z[i], data.t2x[i], data.t2y[i], data.t2z[i] );
 
@@ -843,7 +839,7 @@ void datagn( void )
 
 		fprintf( output_fp,
 			"\n     THE STRUCTURE HAS BEEN MOVED, MOVE DATA CARD IS:\n"
-			"   %3d %5d %10.5LF %10.5LF %10.5LF %10.5LF %10.5LF %10.5LF %10.5LF",
+			"   %3d %5d %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f",
 			itg, ns, xw1, yw1, zw1, xw2, yw2, zw2, rad );
 
 		xw1= xw1* TA;
@@ -865,7 +861,7 @@ void datagn( void )
 		}
 
 		fprintf( output_fp, "\n"
-			" %5d%c %10.5LF %10.5LF %10.5LF %10.5LF %10.5LF %10.5LF",
+			" %5d%c %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f",
 			i1, ipt[ns-1], xw1, yw1, zw1, xw2, yw2, zw2 );
 
 		if( (ns == 2) || (ns == 4) )
@@ -883,7 +879,7 @@ void datagn( void )
 		  }
 
 		  fprintf( output_fp, "\n"
-			  "      %11.5LF %11.5LF %11.5LF %11.5LF %11.5LF %11.5LF",
+			  "      %11.5f %11.5f %11.5f %11.5f %11.5f %11.5f",
 			  x3, y3, z3, x4, y4, z4 );
 
 		  if( strcmp(gm, "SC") != 0 )
@@ -907,7 +903,7 @@ void datagn( void )
 
 		i1= data.m+1;
 		fprintf( output_fp, "\n"
-			" %5d%c %10.5LF %11.5LF %11.5LF %11.5LF %11.5LF %11.5LF"
+			" %5d%c %10.5f %11.5f %11.5f %11.5f %11.5f %11.5f"
 			"     SURFACE - %d BY %d PATCHES",
 			i1, ipt[1], xw1, yw1, zw1, xw2, yw2, zw2, itg, ns );
 
@@ -927,7 +923,7 @@ void datagn( void )
 		}
 
 		fprintf( output_fp, "\n"
-			"      %11.5LF %11.5LF %11.5LF %11.5LF %11.5LF %11.5LF",
+			"      %11.5f %11.5f %11.5f %11.5f %11.5f %11.5f",
 			x3, y3, z3, x4, y4, z4 );
 
 		if( strcmp(gm, "SC" ) != 0 )
@@ -947,8 +943,8 @@ void datagn( void )
 		i2= data.n+ ns;
 
 		fprintf( output_fp, "\n"
-			" %5d  ARC RADIUS: %9.5LF  FROM: %8.3LF TO: %8.3LF DEGREES"
-			"       %11.5LF %5d %5d %5d %4d",
+			" %5d ARC RADIUS: %9.5f  FROM: %8.3f TO: %8.3f DEGREES"
+			"       %11.5f %5d %5d %5d %4d",
 			nwire, xw1, yw1, zw1, xw2, ns, i1, i2, itg );
 
 		arc( itg, ns, xw1, yw1, zw1, xw2);
@@ -1004,11 +1000,11 @@ void datagn( void )
 		}
 
 		fprintf( output_fp, "\n"
-			" %5d%c %10.5LF %11.5LF %11.5LF %11.5LF %11.5LF %11.5LF",
+			" %5d%c %10.5f %11.5f %11.5f %11.5f %11.5f %11.5f",
 			i1, ipt[ns-1], xw1, yw1, zw1, xw2, yw2, zw2 );
 
 		fprintf( output_fp, "\n"
-			"      %11.5LF %11.5LF %11.5LF  %11.5LF %11.5LF %11.5LF",
+			"      %11.5f %11.5f %11.5f  %11.5f %11.5f %11.5f",
 			x3, y3, z3, x4, y4, z4 );
 
 		patch( itg, ns, xw1, yw1, zw1, xw2, yw2, zw2, x3, y3, z3, x4, y4, z4);
@@ -1022,9 +1018,9 @@ void datagn( void )
 		i2= data.n+ ns;
 
 		fprintf( output_fp, "\n"
-			" %5d HELIX STRUCTURE - SPACING OF TURNS: %8.3LF AXIAL"
-			" LENGTH: %8.3LF  %8.3LF %5d %5d %5d %4d\n      "
-			" RADIUS X1:%8.3LF Y1:%8.3LF X2:%8.3LF Y2:%8.3LF ",
+			" %5d HELIX STRUCTURE - SPACING OF TURNS: %8.3f AXIAL"
+			" LENGTH: %8.3f  %8.3f %5d %5d %5d %4d\n      "
+			" RADIUS X1:%8.3f Y1:%8.3f X2:%8.3f Y2:%8.3f ",
 			nwire, xw1, yw1, rad, ns, i1, i2, itg, zw1, xw2, yw2, zw2 );
 
 		helix( xw1, yw1, zw1, xw2, yw2, zw2, rad, ns, itg);
@@ -1038,7 +1034,7 @@ void datagn( void )
 
 		fprintf( output_fp, "\n  GEOMETRY DATA CARD ERROR" );
 		fprintf( output_fp, "\n"
-			" %2s %3d %5d %10.5LF %10.5LF %10.5LF %10.5LF %10.5LF %10.5LF %10.5LF",
+			" %2s %3d %5d %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f %10.5f",
 			gm, itg, ns, xw1, yw1, zw1, xw2, yw2, zw2, rad );
 
 		stop(-1);
@@ -1048,19 +1044,18 @@ void datagn( void )
   } /* do */
   while( TRUE );
 
-  return;
 }
 
 /*-----------------------------------------------------------------------*/
 
 /* subroutine helix generates segment geometry */
 /* data for a helix of ns segments */
-void helix( long double s, long double hl, long double a1, long double b1,
-	long double a2, long double b2, long double rad, int ns, int itg )
+void helix( double s, double hl, double a1, double b1,
+	double a2, double b2, double rad, int ns, int itg )
 {
   int ist, i;
   size_t mreq;
-  long double zinc, copy, sangle, hdia, turn, pitch, hmaj, hmin;
+  double zinc, copy, sangle, hdia, turn, pitch, hmaj, hmin;
 
   ist= data.n;
   data.n += ns;
@@ -1071,14 +1066,16 @@ void helix( long double s, long double hl, long double a1, long double b1,
   if( ns < 1)
 	return;
 
-  zinc= fabsl( hl/ ns);
+  zinc= fabs( hl/ ns);
 
   /* Reallocate tags buffer */
-  mreq = (data.n + data.m) * sizeof(int);
+  mreq = (size_t)(data.n + data.m);
+  mreq *= sizeof(int);
   mem_realloc( (void *)&data.itag, mreq );
 
   /* Reallocate wire buffers */
-  mreq = data.n * sizeof(long double);
+  mreq = (size_t)data.n;
+  mreq *= sizeof(double);
   mem_realloc( (void *)&data.x1, mreq );
   mem_realloc( (void *)&data.y1, mreq );
   mem_realloc( (void *)&data.z1, mreq );
@@ -1098,25 +1095,25 @@ void helix( long double s, long double hl, long double a1, long double b1,
 
 	data.z2[i]= data.z1[i]+ zinc;
 
-	if( a2 == a1)
+	if( a2 == a1 )
 	{
 	  if( b1 == 0.)
 		b1= a1;
 
-	  data.x1[i]= a1* cosl(2.* PI* data.z1[i]/ s);
-	  data.y1[i]= b1* sinl(2.* PI* data.z1[i]/ s);
-	  data.x2[i]= a1* cosl(2.* PI* data.z2[i]/ s);
-	  data.y2[i]= b1* sinl(2.* PI* data.z2[i]/ s);
+	  data.x1[i]= a1* cos(2.* PI* data.z1[i]/ s);
+	  data.y1[i]= b1* sin(2.* PI* data.z1[i]/ s);
+	  data.x2[i]= a1* cos(2.* PI* data.z2[i]/ s);
+	  data.y2[i]= b1* sin(2.* PI* data.z2[i]/ s);
 	}
 	else
 	{
 	  if( b2 == 0.)
 		b2= a2;
 
-	  data.x1[i]=( a1+( a2- a1)* data.z1[i]/ fabsl( hl))* cosl(2.* PI* data.z1[i]/ s);
-	  data.y1[i]=( b1+( b2- b1)* data.z1[i]/ fabsl( hl))* sinl(2.* PI* data.z1[i]/ s);
-	  data.x2[i]=( a1+( a2- a1)* data.z2[i]/ fabsl( hl))* cosl(2.* PI* data.z2[i]/ s);
-	  data.y2[i]=( b1+( b2- b1)* data.z2[i]/ fabsl( hl))* sinl(2.* PI* data.z2[i]/ s);
+	  data.x1[i]=( a1+( a2- a1)* data.z1[i]/ fabs( hl))* cos(2.* PI* data.z1[i]/ s);
+	  data.y1[i]=( b1+( b2- b1)* data.z1[i]/ fabs( hl))* sin(2.* PI* data.z1[i]/ s);
+	  data.x2[i]=( a1+( a2- a1)* data.z2[i]/ fabs( hl))* cos(2.* PI* data.z2[i]/ s);
+	  data.y2[i]=( b1+( b2- b1)* data.z2[i]/ fabs( hl))* sin(2.* PI* data.z2[i]/ s);
 
 	} /* if( a2 == a1) */
 
@@ -1134,9 +1131,9 @@ void helix( long double s, long double hl, long double a1, long double b1,
 
   if( a2 != a1)
   {
-	sangle= atanl( a2/( fabsl( hl)+( fabsl( hl)* a1)/( a2- a1)));
+	sangle= atan( a2/( fabs( hl)+( fabs( hl)* a1)/( a2- a1)));
 	fprintf( output_fp,
-		"\n       THE CONE ANGLE OF THE SPIRAL IS %10.4LF", sangle );
+		"\n       THE CONE ANGLE OF THE SPIRAL IS %10.4f", sangle );
 	return;
   }
 
@@ -1144,8 +1141,8 @@ void helix( long double s, long double hl, long double a1, long double b1,
   {
 	hdia=2.* a1;
 	turn= hdia* PI;
-	pitch= atanl( s/( PI* hdia));
-	turn= turn/ cosl( pitch);
+	pitch= atan( s/( PI* hdia));
+	turn= turn/ cos( pitch);
 	pitch=180.* pitch/ PI;
   }
   else
@@ -1161,14 +1158,14 @@ void helix( long double s, long double hl, long double a1, long double b1,
 	  hmin=2.* a1;
 	}
 
-	hdia= sqrtl(( hmaj*hmaj+ hmin*hmin)/2* hmaj);
+	hdia= sqrt(( hmaj*hmaj+ hmin*hmin)/2* hmaj);
 	turn=2.* PI* hdia;
-	pitch=(180./ PI)* atanl( s/( PI* hdia));
+	pitch=(180./ PI)* atan( s/( PI* hdia));
 
   } /* if( a1 == b1) */
 
   fprintf( output_fp, "\n"
-	  "       THE PITCH ANGLE IS: %.4LF    THE LENGTH OF WIRE/TURN IS: %.4LF",
+	  "       THE PITCH ANGLE IS: %.4f    THE LENGTH OF WIRE/TURN IS: %.4f",
 	  pitch, turn );
 
   return;
@@ -1229,23 +1226,23 @@ int isegno( int itagi, int mx)
 /* coordinate system or reproduces structure in new positions. */
 /* structure is rotated about x,y,z axes by rox,roy,roz */
 /* respectively, then shifted by xs,ys,zs */
-void move( long double rox, long double roy, long double roz, long double xs,
-	long double ys, long double zs, int its, int nrpt, int itgi )
+void move( double rox, double roy, double roz, double xs,
+	double ys, double zs, int its, int nrpt, int itgi )
 {
   int nrp, ix, i1, k, i;
   size_t mreq;
-  long double sps, cps, sth, cth, sph, cph, xx, xy;
-  long double xz, yx, yy, yz, zx, zy, zz, xi, yi, zi;
+  double sps, cps, sth, cth, sph, cph, xx, xy;
+  double xz, yx, yy, yz, zx, zy, zz, xi, yi, zi;
 
-  if( fabsl( rox)+ fabsl( roy) > 1.0e-10)
+  if( fabs( rox)+ fabs( roy) > 1.0e-10)
 	data.ipsym= data.ipsym*3;
 
-  sps= sinl( rox);
-  cps= cosl( rox);
-  sth= sinl( roy);
-  cth= cosl( roy);
-  sph= sinl( roz);
-  cph= cosl( roz);
+  sps= sin( rox);
+  cps= cos( rox);
+  sth= sin( roy);
+  cth= cos( roy);
+  sph= sin( roz);
+  cph= cos( roz);
   xx= cph* cth;
   xy= cph* sth* sps- sph* cps;
   xz= cph* sth* cps+ sph* sps;
@@ -1276,11 +1273,13 @@ void move( long double rox, long double roy, long double roz, long double xs,
 	{
 	  k= data.n;
 	  /* Reallocate tags buffer */
-	  mreq = (data.n + data.m + (data.n + 1 - i1) * nrpt) * sizeof(int);
+	  mreq = (size_t)(data.n + data.m + (data.n + 1 - i1) * nrpt);
+	  mreq *= sizeof(int);
 	  mem_realloc( (void *)&data.itag, mreq );
 
 	  /* Reallocate wire buffers */
-	  mreq = (data.n + (data.n + 1 - i1) * nrpt) * sizeof(long double);
+	  mreq = (size_t)(data.n + (data.n + 1 - i1) * nrpt);
+	  mreq *= sizeof(double);
 	  mem_realloc( (void *)&data.x1, mreq );
 	  mem_realloc( (void *)&data.y1, mreq );
 	  mem_realloc( (void *)&data.z1, mreq );
@@ -1332,7 +1331,8 @@ void move( long double rox, long double roy, long double roz, long double xs,
 	  k = data.m;
 
 	/* Reallocate patch buffers */
-	mreq = data.m * (nrpt + 1) * sizeof(long double);
+	mreq = (size_t)(data.m * (nrpt + 1));
+	mreq *= sizeof(double);
 	mem_realloc( (void *)&data.px, mreq );
 	mem_realloc( (void *)&data.py, mreq );
 	mem_realloc( (void *)&data.pz, mreq );
@@ -1394,15 +1394,15 @@ void move( long double rox, long double roy, long double roz, long double xs,
 
 /* patch generates and modifies patch geometry data */
 void patch( int nx, int ny,
-	long double ax1, long double ay1, long double az1,
-	long double ax2, long double ay2, long double az2,
-	long double ax3, long double ay3, long double az3,
-	long double ax4, long double ay4, long double az4 )
+	double ax1, double ay1, double az1,
+	double ax2, double ay2, double az2,
+	double ax3, double ay3, double az3,
+	double ax4, double ay4, double az4 )
 {
   int mi, ntp;
   size_t mreq;
-  long double s1x=0., s1y=0., s1z=0., s2x=0., s2y=0., s2z=0., xst=0.;
-  long double znv, xnv, ynv, xa, xn2, yn2, zn2;
+  double s1x=0., s1y=0., s1z=0., s2x=0., s2y=0., s2z=0., xst=0.;
+  double znv, xnv, ynv, xa, xn2, yn2, zn2;
 
   /* new patches.  for nx=0, ny=1,2,3,4 patch is (respectively) */
   /* arbitrary, rectagular, triangular, or quadrilateral. */
@@ -1413,7 +1413,8 @@ void patch( int nx, int ny,
   mi= data.m-1;
 
   /* Reallocate patch buffers */
-  mreq = data.m * sizeof(long double);
+  mreq = (size_t)data.m;
+  mreq *= sizeof(double);
   mem_realloc( (void *)&data.px, mreq );
   mem_realloc( (void *)&data.py, mreq );
   mem_realloc( (void *)&data.pz, mreq );
@@ -1437,11 +1438,11 @@ void patch( int nx, int ny,
 	data.py[mi]= ay1;
 	data.pz[mi]= az1;
 	data.pbi[mi]= az2;
-	znv= cosl( ax2);
-	xnv= znv* cosl( ay2);
-	ynv= znv* sinl( ay2);
-	znv= sinl( ax2);
-	xa= sqrtl( xnv* xnv+ ynv* ynv);
+	znv= cos( ax2);
+	xnv= znv* cos( ay2);
+	ynv= znv* sin( ay2);
+	znv= sin( ax2);
+	xa= sqrt( xnv* xnv+ ynv* ynv);
 
 	if( xa >= 1.0e-6)
 	{
@@ -1479,11 +1480,11 @@ void patch( int nx, int ny,
 	xnv= s1y* s2z- s1z* s2y;
 	ynv= s1z* s2x- s1x* s2z;
 	znv= s1x* s2y- s1y* s2x;
-	xa= sqrtl( xnv* xnv+ ynv* ynv+ znv* znv);
+	xa= sqrt( xnv* xnv+ ynv* ynv+ znv* znv);
 	xnv= xnv/ xa;
 	ynv= ynv/ xa;
 	znv= znv/ xa;
-	xst= sqrtl( s1x* s1x+ s1y* s1y+ s1z* s1z);
+	xst= sqrt( s1x* s1x+ s1y* s1y+ s1z* s1z);
 	data.t1x[mi]= s1x/ xst;
 	data.t1y[mi]= s1y/ xst;
 	data.t1z[mi]= s1z/ xst;
@@ -1506,7 +1507,7 @@ void patch( int nx, int ny,
 	  }
 	  else
 	  {
-		long double salpn;
+		double salpn;
 		s1x= ax3- ax1;
 		s1y= ay3- ay1;
 		s1z= az3- az1;
@@ -1516,7 +1517,7 @@ void patch( int nx, int ny,
 		xn2= s1y* s2z- s1z* s2y;
 		yn2= s1z* s2x- s1x* s2z;
 		zn2= s1x* s2y- s1y* s2x;
-		xst= sqrtl( xn2* xn2+ yn2* yn2+ zn2* zn2);
+		xst= sqrt( xn2* xn2+ yn2* yn2+ zn2* zn2);
 		salpn=1./(3.*( xa+ xst));
 		data.px[mi]=( xa*( ax1+ ax2+ ax3)+ xst*( ax1+ ax3+ ax4))* salpn;
 		data.py[mi]=( xa*( ay1+ ay2+ ay3)+ xst*( ay1+ ay3+ ay4))* salpn;
@@ -1546,11 +1547,12 @@ void patch( int nx, int ny,
   if( nx != 0)
   {
 	int iy, ix;
-	long double xs, ys, zs, xt, yt, zt;
+	double xs, ys, zs, xt, yt, zt;
 
 	data.m += nx*ny-1;
 	/* Reallocate patch buffers */
-	mreq = data.m * sizeof(long double);
+	mreq = (size_t)data.m;
+	mreq *= sizeof(double);
 	mem_realloc( (void *)&data.px, mreq );
 	mem_realloc( (void *)&data.py, mreq );
 	mem_realloc( (void *)&data.pz, mreq );
@@ -1581,7 +1583,7 @@ void patch( int nx, int ny,
 
 	  for( ix = 1; ix <= nx; ix++ )
 	  {
-		xst= (long double)ix;
+		xst= (double)ix;
 		data.px[mi]= xn2+ xst* s1x;
 		data.py[mi]= yn2+ xst* s1y;
 		data.pz[mi]= zn2+ xst* s1z;
@@ -1614,7 +1616,7 @@ void subph( int nx, int ny )
 {
   int mia, ix, iy, mi;
   size_t mreq;
-  long double xs, ys, zs, xa, xst, s1x, s1y, s1z, s2x, s2y, s2z, saln, xt, yt;
+  double xs, ys, zs, xa, xst, s1x, s1y, s1z, s2x, s2y, s2z, saln, xt, yt;
 
   /* Reallocate patch buffers */
   if( ny == 0 )
@@ -1622,7 +1624,8 @@ void subph( int nx, int ny )
   else
 	data.m += 4;
 
-  mreq = data.m * sizeof(long double);
+  mreq = (size_t)data.m;
+  mreq *= sizeof(double);
   mem_realloc( (void *)&data.px, mreq );
   mem_realloc( (void *)&data.py, mreq );
   mem_realloc( (void *)&data.pz, mreq );
@@ -1634,10 +1637,10 @@ void subph( int nx, int ny )
   mem_realloc( (void *)&data.t2z, mreq );
   mem_realloc( (void *)&data.pbi, mreq );
   mem_realloc( (void *)&data.psalp, mreq );
-  mreq = (data.n + data.m) * sizeof(int);
+  mreq = (size_t)(data.n + data.m);
+  mreq *= sizeof(int);
   mem_realloc( (void *)&data.icon1, mreq );
   mem_realloc( (void *)&data.icon2, mreq );
-
 
   /* Shift patches to make room for new ones */
   if( (ny == 0) && (nx != data.m) )
@@ -1666,7 +1669,7 @@ void subph( int nx, int ny )
   ys= data.py[mi];
   zs= data.pz[mi];
   xa= data.pbi[mi]/4.;
-  xst= sqrtl( xa)/2.;
+  xst= sqrt( xa)/2.;
   s1x= data.t1x[mi];
   s1y= data.t1y[mi];
   s1z= data.t1z[mi];
@@ -1719,21 +1722,21 @@ void subph( int nx, int ny )
 
 /*-----------------------------------------------------------------------*/
 
-void readgm( char *gm, int *i1, int *i2, long double *x1, long double *y1,
-	long double *z1, long double *x2, long double *y2, long double *z2, long double *rad )
+void readgm( char *gm, int *i1, int *i2, double *x1, double *y1,
+	double *z1, double *x2, double *y2, double *z2, double *rad )
 {
   char line_buf[134];
   int nlin, i, line_idx;
   int nint = 2, nflt = 7;
   int iarr[2] = { 0, 0 };
-  long double rarr[7] = { 0., 0., 0., 0., 0., 0., 0. };
+  double rarr[7] = { 0., 0., 0., 0., 0., 0., 0. };
 
 
   /* read a line from input file */
   load_line( line_buf, input_fp );
 
   /* get line length */
-  nlin= strlen( line_buf );
+  nlin= (int)strlen( line_buf );
 
   /* abort if card's mnemonic too short or missing */
   if( nlin < 2 )
@@ -1832,7 +1835,7 @@ void readgm( char *gm, int *i1, int *i2, long double *x1, long double *y1,
 
   } /* for( i = 0; i < nint; i++ ) */
 
-  /* read long doubles from line */
+  /* read doubles from line */
   for( i = 0; i < nflt; i++ )
   {
 	/* Find first numerical character */
@@ -1855,7 +1858,7 @@ void readgm( char *gm, int *i1, int *i2, long double *x1, long double *y1,
 		return;
 	  }
 
-	/* read a long double from line */
+	/* read a double from line */
 	rarr[i] = atof( &line_buf[line_idx] );
 
 	/* traverse numerical field to next ' ' or ',' or '\0' */
@@ -1922,7 +1925,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 {
   int iti, i, nx, itagi, k;
   size_t mreq;
-  long double e1, e2, fnop, sam, cs, ss, xk, yk;
+  double e1, e2, fnop, sam, cs, ss, xk, yk;
 
   data.np= data.n;
   data.mp= data.m;
@@ -1944,11 +1947,13 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  if( data.n > 0 )
 	  {
 		/* Reallocate tags buffer */
-		mreq = (2 * data.n + data.m) * sizeof(int);
+		mreq = (size_t)(2 * data.n + data.m);
+		mreq *= sizeof(int);
 		mem_realloc( (void *)&data.itag, mreq );
 
 		/* Reallocate wire buffers */
-		mreq = 2 * data.n * sizeof(long double);
+		mreq = (size_t)(2 * data.n);
+		mreq *= sizeof(double);
 		mem_realloc( (void *)&data.x1, mreq );
 		mem_realloc( (void *)&data.y1, mreq );
 		mem_realloc( (void *)&data.z1, mreq );
@@ -1963,7 +1968,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 		  e1= data.z1[i];
 		  e2= data.z2[i];
 
-		  if( (fabsl(e1)+fabsl(e2) <= 1.0e-5) || (e1*e2 < -1.0e-6) )
+		  if( (fabs(e1)+fabs(e2) <= 1.0e-5) || (e1*e2 < -1.0e-6) )
 		  {
 			fprintf( output_fp,
 				"\n  GEOMETRY DATA ERROR--SEGMENT %d"
@@ -1996,7 +2001,8 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  if( data.m > 0 )
 	  {
 		/* Reallocate patch buffers */
-		mreq = 2 * data.m * sizeof(long double);
+		mreq = (size_t)(2 * data.m);
+		mreq *= sizeof(double);
 		mem_realloc( (void *)&data.px, mreq );
 		mem_realloc( (void *)&data.py, mreq );
 		mem_realloc( (void *)&data.pz, mreq );
@@ -2012,7 +2018,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 		for( i = 0; i < data.m; i++ )
 		{
 		  nx = i+data.m;
-		  if( fabsl(data.pz[i]) <= 1.0e-10)
+		  if( fabs(data.pz[i]) <= 1.0e-10)
 		  {
 			fprintf( output_fp,
 				"\n  GEOMETRY DATA ERROR--PATCH %d"
@@ -2045,11 +2051,13 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  if( data.n > 0)
 	  {
 		/* Reallocate tags buffer */
-		mreq = (2 * data.n + data.m) * sizeof(int);
+		mreq = (size_t)(2 * data.n + data.m);
+		mreq *= sizeof(int);
 		mem_realloc( (void *)&data.itag, mreq );
 
 		/* Reallocate wire buffers */
-		mreq = 2 * data.n * sizeof(long double);
+		mreq = (size_t)(2 * data.n);
+		mreq *= sizeof(double);
 		mem_realloc( (void *)&data.x1, mreq );
 		mem_realloc( (void *)&data.y1, mreq );
 		mem_realloc( (void *)&data.z1, mreq );
@@ -2064,7 +2072,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 		  e1= data.y1[i];
 		  e2= data.y2[i];
 
-		  if( (fabsl(e1)+fabsl(e2) <= 1.0e-5) || (e1*e2 < -1.0e-6) )
+		  if( (fabs(e1)+fabs(e2) <= 1.0e-5) || (e1*e2 < -1.0e-6) )
 		  {
 			fprintf( output_fp,
 				"\n  GEOMETRY DATA ERROR--SEGMENT %d"
@@ -2097,7 +2105,8 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  if( data.m > 0 )
 	  {
 		/* Reallocate patch buffers */
-		mreq = 2 * data.m * sizeof(long double);
+		mreq = (size_t)(2 * data.m);
+		mreq *= sizeof(double);
 		mem_realloc( (void *)&data.px, mreq );
 		mem_realloc( (void *)&data.py, mreq );
 		mem_realloc( (void *)&data.pz, mreq );
@@ -2113,7 +2122,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 		for( i = 0; i < data.m; i++ )
 		{
 		  nx= i+data.m;
-		  if( fabsl( data.py[i]) <= 1.0e-10)
+		  if( fabs( data.py[i]) <= 1.0e-10)
 		  {
 			fprintf( output_fp,
 				"\n  GEOMETRY DATA ERROR--PATCH %d"
@@ -2148,11 +2157,13 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	if( data.n > 0 )
 	{
 	  /* Reallocate tags buffer */
-	  mreq = (2 * data.n + data.m) * sizeof(int);
+	  mreq = (size_t)(2 * data.n + data.m);
+	  mreq *= sizeof(int);
 	  mem_realloc( (void *)&data.itag, mreq );
 
 	  /* Reallocate wire buffers */
-	  mreq = 2 * data.n * sizeof(long double);
+	  mreq = (size_t)(2 * data.n);
+	  mreq *= sizeof(double);
 	  mem_realloc( (void *)&data.x1, mreq );
 	  mem_realloc( (void *)&data.y1, mreq );
 	  mem_realloc( (void *)&data.z1, mreq );
@@ -2167,7 +2178,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 		e1= data.x1[i];
 		e2= data.x2[i];
 
-		if( (fabsl(e1)+fabsl(e2) <= 1.0e-5) || (e1*e2 < -1.0e-6) )
+		if( (fabs(e1)+fabs(e2) <= 1.0e-5) || (e1*e2 < -1.0e-6) )
 		{
 		  fprintf( output_fp,
 			  "\n  GEOMETRY DATA ERROR--SEGMENT %d"
@@ -2199,7 +2210,8 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	  return;
 
 	/* Reallocate patch buffers */
-	mreq = 2 * data.m * sizeof(long double);
+	mreq = (size_t)(2 * data.m);
+	mreq *= sizeof(double);
 	mem_realloc( (void *)&data.px, mreq );
 	mem_realloc( (void *)&data.py, mreq );
 	mem_realloc( (void *)&data.pz, mreq );
@@ -2215,7 +2227,7 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	for( i = 0; i < data.m; i++ )
 	{
 	  nx= i+data.m;
-	  if( fabsl( data.px[i]) <= 1.0e-10)
+	  if( fabs( data.px[i]) <= 1.0e-10)
 	  {
 		fprintf( output_fp,
 			"\n  GEOMETRY DATA ERROR--PATCH %d"
@@ -2242,11 +2254,11 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
   } /* if( ix >= 0) */
 
   /* reproduce structure with rotation to form cylindrical structure */
-  fnop= (long double)nop;
+  fnop= (double)nop;
   data.ipsym=-1;
   sam=TP/ fnop;
-  cs= cosl( sam);
-  ss= sinl( sam);
+  cs= cos( sam);
+  ss= sin( sam);
 
   if( data.n > 0)
   {
@@ -2254,11 +2266,13 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 	nx= data.np;
 
 	/* Reallocate tags buffer */
-	mreq = (data.n + data.m) * sizeof(int);
+	mreq = (size_t)(data.n + data.m);
+	mreq *= sizeof(int);
 	mem_realloc( (void *)&data.itag, mreq );
 
 	/* Reallocate wire buffers */
-	mreq = data.n * sizeof(long double);
+	mreq = (size_t)data.n;
+	mreq *= sizeof(double);
 	mem_realloc( (void *)&data.x1, mreq );
 	mem_realloc( (void *)&data.y1, mreq );
 	mem_realloc( (void *)&data.z1, mreq );
@@ -2298,7 +2312,8 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
   nx= data.mp;
 
   /* Reallocate patch buffers */
-  mreq = data.m * sizeof(long double);
+  mreq = (size_t)data.m;
+  mreq *= sizeof(double);
   mem_realloc( (void *)&data.px, mreq  );
   mem_realloc( (void *)&data.py, mreq  );
   mem_realloc( (void *)&data.pz, mreq );
@@ -2341,14 +2356,14 @@ void reflc( int ix, int iy, int iz, int itx, int nop )
 
 /* subroutine wire generates segment geometry */
 /* data for a straight wire of ns segments. */
-void wire( long double xw1, long double yw1, long double zw1,
-	long double xw2, long double yw2, long double zw2, long double rad,
-	long double rdel, long double rrad, int ns, int itg )
+void wire( double xw1, double yw1, double zw1,
+	double xw2, double yw2, double zw2, double rad,
+	double rdel, double rrad, int ns, int itg )
 {
   int ist, i;
   size_t mreq;
-  long double xd, yd, zd, delz, rd, fns, radz;
-  long double xs1, ys1, zs1, xs2, ys2, zs2;
+  double xd, yd, zd, delz, rd, fns, radz;
+  double xs1, ys1, zs1, xs2, ys2, zs2;
 
   ist= data.n;
   data.n= data.n+ ns;
@@ -2360,11 +2375,13 @@ void wire( long double xw1, long double yw1, long double zw1,
 	return;
 
   /* Reallocate tags buffer */
-  mreq = (data.n + data.m) * sizeof(int);
+  mreq = (size_t)(data.n + data.m);
+  mreq *= sizeof(int);
   mem_realloc( (void *)&data.itag, mreq );
 
   /* Reallocate wire buffers */
-  mreq = data.n * sizeof(long double);
+  mreq = (size_t)data.n;
+  mreq *= sizeof(double);
   mem_realloc( (void *)&data.x1, mreq );
   mem_realloc( (void *)&data.y1, mreq );
   mem_realloc( (void *)&data.z1, mreq );
@@ -2377,13 +2394,13 @@ void wire( long double xw1, long double yw1, long double zw1,
   yd= yw2- yw1;
   zd= zw2- zw1;
 
-  if( fabsl( rdel-1.) >= 1.0e-6)
+  if( fabs( rdel-1.) >= 1.0e-6)
   {
-	delz= sqrtl( xd* xd+ yd* yd+ zd* zd);
+	delz= sqrt( xd* xd+ yd* yd+ zd* zd);
 	xd= xd/ delz;
 	yd= yd/ delz;
 	zd= zd/ delz;
-	delz= delz*(1.- rdel)/(1.- powl(rdel, ns) );
+	delz= delz*(1.- rdel)/(1.- pow(rdel, ns) );
 	rd= rdel;
   }
   else

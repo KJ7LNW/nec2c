@@ -2,10 +2,7 @@
  * Miscellaneous support functions for nec2c.c
  */
 
-#include "nec2c.h"
-
-/* pointers to input/output files */
-extern FILE *input_fp, *output_fp, *plot_fp;
+#include "shared.h"
 
 /*------------------------------------------------------------------------*/
 
@@ -78,13 +75,14 @@ void abort_on_error( int why )
 /*------------------------------------------------------------------------*/
 
 /* Returns process time (user+system) BUT in _msec_ */
-void secnds( long double *x)
+void secnds( double *x)
 {
   struct tms buffer;
+  double clk_tck;
 
   times(&buffer);
-  *x = 1000. * ( (long double)(buffer.tms_utime + buffer.tms_stime) ) /
-	( (long double) sysconf(_SC_CLK_TCK) );
+  clk_tck = sysconf( _SC_CLK_TCK );
+  *x = 1000.0 * (double)(buffer.tms_utime + buffer.tms_stime) / clk_tck;
 
   return;
 }
@@ -153,7 +151,7 @@ int load_line( char *buff, FILE *pfile )
 	  break;
 
 	/* enter new char to buffer */
-	buff[num_chr++] = chr;
+	buff[num_chr++] = (char)chr;
 
 	/* terminate buffer as a string on EOF */
 	if( (chr = fgetc(pfile)) == EOF )

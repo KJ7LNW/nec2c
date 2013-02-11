@@ -5,11 +5,11 @@
  ground.  field components are computed by numerical evaluation
  of modified sommerfeld integrals.
 
- somnec2d is a long double precision version of somnec for use with
+ somnec2d is a double precision version of somnec for use with
  nec2d.  an alternate version (somnec2sd) is also provided in which
  computation is in single precision but the output file is written
- in long double precision for use with nec2d.  somnec2sd runs about twic
- as fast as the full long double precision somnec2d.  the difference
+ in double precision for use with nec2d.  somnec2sd runs about twic
+ as fast as the full double precision somnec2d.  the difference
  between nec2d results using a for021 file from this code rather
  than from somnec2sd was insignficant in the cases tested.
 
@@ -18,26 +18,24 @@
  status of output files set to 'unknown' */
 
 #include "nec2c.h"
+#include "shared.h"
 
 /* common /evlcom/ */
 static int jh;
-static long double ck2, ck2sq, tkmag, tsmag, ck1r, zph, rho;
-static complex long double ct1, ct2, ct3, ck1, ck1sq, cksm;
+static double ck2, ck2sq, tkmag, tsmag, ck1r, zph, rho;
+static complex double ct1, ct2, ct3, ck1, ck1sq, cksm;
 
 /* common /cntour/ */
-static complex long double a, b;
-
-/*common  /ggrid/ */
-ggrid_t ggrid;
+static complex double a, b;
 
 /*-----------------------------------------------------------------------*/
 
 /* This is the "main" of somnec */
-void somnec( long double epr, long double sig, long double fmhz )
+void somnec( double epr, double sig, double fmhz )
 {
   int k, nth, ith, irs, ir, nr;
-  long double tim, wlam, tst, dr, dth, r, rk, thet, tfac1, tfac2;
-  complex long double erv, ezv, erh, eph, cl1, cl2, con;
+  double tim, wlam, tst, dr, dth=0.0, r, rk, thet, tfac1, tfac2;
+  complex double erv, ezv, erh, eph, cl1, cl2, con;
 
   if(sig >= 0.)
   {
@@ -56,10 +54,10 @@ void somnec( long double epr, long double sig, long double fmhz )
   /* evlua. */
 
   ck1sq=ck2sq*conj(ggrid.epscf);
-  ck1=csqrtl(ck1sq);
+  ck1=csqrt(ck1sq);
   ck1r=creal(ck1);
   tkmag=100.*cabs(ck1);
-  tsmag=100.*ck1*conj(ck1);
+  tsmag=100.*creal(ck1*conj(ck1));
   cksm=ck2sq/(ck1sq+ck2sq);
   ct1=.5*(ck1sq-ck2sq);
   erv=ck1sq*ck1sq;
@@ -84,7 +82,7 @@ void somnec( long double epr, long double sig, long double fmhz )
 	  irs=2;
 	}
 
-	/*  loop over r.  (r=sqrtl(rho**2 + (z+h)**2)) */
+	/*  loop over r.  (r=sqrt(rho**2 + (z+h)**2)) */
 	for( ir = irs-1; ir < nr; ir++ )
 	{
 	  r += dr;
@@ -94,8 +92,8 @@ void somnec( long double epr, long double sig, long double fmhz )
 	  for( ith = 0; ith < nth; ith++ )
 	  {
 		thet += dth;
-		rho=r*cosl(thet);
-		zph=r*sinl(thet);
+		rho=r*cos(thet);
+		zph=r*sin(thet);
 		if(rho < 1.e-7)
 		  rho=1.e-8;
 		if(zph < 1.e-7)
@@ -104,7 +102,7 @@ void somnec( long double epr, long double sig, long double fmhz )
 		evlua( &erv, &ezv, &erh, &eph );
 
 		rk=ck2*r;
-		con=-CONST1*r/cmplx(cosl(rk),-sinl(rk));
+		con=-CONST1*r/cmplx(cos(rk),-sin(rk));
 
 		switch( k )
 		{
@@ -148,8 +146,8 @@ void somnec( long double epr, long double sig, long double fmhz )
 	thet += dth;
 	if( (ith+1) != nth )
 	{
-	  tfac2=cosl(thet);
-	  tfac1=(1.-sinl(thet))/tfac2;
+	  tfac2=cos(thet);
+	  tfac1=(1.-sin(thet))/tfac2;
 	  tfac2=tfac1/tfac2;
 	  erv=ggrid.epscf*cl1*tfac1;
 	  erh=cl1*(tfac2-1.)+cl2;
@@ -178,13 +176,13 @@ void somnec( long double epr, long double sig, long double fmhz )
 
 /* bessel evaluates the zero-order bessel function */
 /* and its derivative for complex argument z. */
-void bessel( complex long double z, complex long double *j0, complex long double *j0p )
+void bessel( complex double z, complex double *j0, complex double *j0p )
 {
   int k, ib;
   static int m[101], init = FALSE;
-  static long double a1[25], a2[25];
-  long double zms;
-  complex long double p0z, p1z, q0z, q1z, zi, zi2, zk, cz, sz, j0x=CPLX_00, j0px=CPLX_00;
+  static double a1[25], a2[25];
+  double zms;
+  complex double p0z, p1z, q0z, q1z, zi, zi2, zk, cz, sz, j0x=CPLX_00, j0px=CPLX_00;
 
   /* initialization of constants */
   if( ! init )
@@ -199,7 +197,7 @@ void bessel( complex long double z, complex long double *j0, complex long double
 
 	for( i = 1; i <= 101; i++ )
 	{
-	  long double tst = 1.0;
+	  double tst = 1.0;
 	  for( k = 0; k < 24; k++ )
 	  {
 		init = k;
@@ -214,7 +212,7 @@ void bessel( complex long double z, complex long double *j0, complex long double
 	init = TRUE;
   } /* if(init == 0) */
 
-  zms=z*conj(z);
+  zms=creal(z*conj(z));
   if(zms <= 1.e-12)
   {
 	*j0=CPLX_10;
@@ -229,7 +227,7 @@ void bessel( complex long double z, complex long double *j0, complex long double
 	  ib=1;
 
 	/* series expansion */
-	int iz=zms;
+	int iz=(int)zms;
 	int miz=m[iz];
 	*j0=CPLX_10;
 	*j0p=*j0;
@@ -262,14 +260,14 @@ void bessel( complex long double z, complex long double *j0, complex long double
   zi2=1./zk;
   cz=.5*(zk+zi2);
   sz=CPLX_01*.5*(zi2-zk);
-  zk=C3*csqrtl(zi);
+  zk=C3*csqrt(zi);
   *j0=zk*(p0z*cz-q0z*sz);
   *j0p=-zk*(p1z*sz+q1z*cz);
 
   if(ib == 0)
 	return;
 
-  zms=cosl((sqrtl(zms)-6.)*PI10);
+  zms=cos((sqrt(zms)-6.)*PI10);
   *j0=.5*(j0x*(1.+zms)+ *j0*(1.-zms));
   *j0p=.5*(j0px*(1.+zms)+ *j0p*(1.-zms));
 
@@ -280,12 +278,12 @@ void bessel( complex long double z, complex long double *j0, complex long double
 
 /* evlua controls the integration contour in the complex */
 /* lambda plane for evaluation of the sommerfeld integrals */
-void evlua( complex long double *erv, complex long double *ezv,
-	complex long double *erh, complex long double *eph )
+void evlua( complex double *erv, complex double *ezv,
+	complex double *erh, complex double *eph )
 {
   int i, jump;
-  static long double del, slope, rmis;
-  static complex long double cp1, cp2, cp3, bk, delta, delta2, sum[6], ans[6];
+  static double del, slope, rmis;
+  static complex double cp1, cp2, cp3, bk, delta, delta2, sum[6], ans[6];
 
   del=zph;
   if( rho > del )
@@ -350,7 +348,7 @@ void evlua( complex long double *erv, complex long double *ezv,
 	slope=1000.;
 
   del=PTP/del;
-  delta=cmplx(-1.0,slope)*del/sqrtl(1.+slope*slope);
+  delta=cmplx(-1.0,slope)*del/sqrt(1.+slope*slope);
   delta2=-conj(delta);
   gshank(cp1,delta,ans,6,sum,0,bk,bk);
   rmis=rho*(creal(ck1)-ck2);
@@ -361,7 +359,7 @@ void evlua( complex long double *erv, complex long double *ezv,
 	if(zph >= 1.e-10)
 	{
 	  bk=cmplx(-zph,rho)*(ck1-cp3);
-	  rmis=-creal(bk)/fabsl(cimag(bk));
+	  rmis=-creal(bk)/fabs(cimag(bk));
 	  if(rmis > 4.*rho/zph)
 		jump = TRUE;
 	}
@@ -369,7 +367,7 @@ void evlua( complex long double *erv, complex long double *ezv,
 	if( ! jump )
 	{
 	  /* integrate up between branch cuts, then to + infinity */
-	  cp1=ck1-(.1+.2fj);
+	  cp1=ck1-(.1+I*0.2);
 	  cp2=cp1+.2;
 	  bk=cmplx(0.,del);
 	  gshank(cp1,bk,sum,6,ans,0,bk,bk);
@@ -420,13 +418,13 @@ void evlua( complex long double *erv, complex long double *ezv,
 /*-----------------------------------------------------------------------*/
 
 /* fbar is sommerfeld attenuation function for numerical distance p */
-void fbar( complex long double p, complex long double *fbar )
+void fbar( complex double p, complex double *fbar )
 {
   int i, minus;
-  long double tms, sms;
-  complex long double z, zs, sum, pow, term;
+  double tms, sms;
+  complex double z, zs, sum, pow, term;
 
-  z= CPLX_01* csqrtl( p);
+  z= CPLX_01* csqrt( p);
   if( cabs( z) <= 3.)
   {
 	/* series expansion */
@@ -436,7 +434,7 @@ void fbar( complex long double p, complex long double *fbar )
 
 	for( i = 1; i <= 100; i++ )
 	{
-	  pow= -pow* zs/ (long double)i;
+	  pow= -pow* zs/ (double)i;
 	  term= pow/(2.* i+1.);
 	  sum= sum+ term;
 	  tms= creal( term* conj( term));
@@ -480,14 +478,14 @@ void fbar( complex long double p, complex long double *fbar )
 /* the step increment may be changed from dela to delb.  shank's */
 /* algorithm to accelerate convergence of a slowly converging series */
 /* is used */
-void gshank( complex long double start, complex long double dela,
-	complex long double *sum, int nans, complex long double *seed,
-	int ibk, complex long double bk, complex long double delb )
+void gshank( complex double start, complex double dela,
+	complex double *sum, int nans, complex double *seed,
+	int ibk, complex double bk, complex double delb )
 {
   int ibx, j, i, jm, intx, inx, brk=0;
-  static long double rbk, amg, den, denm;
-  complex long double a1, a2, as1, as2, del, aa;
-  complex long double q1[6][20], q2[6][20], ans1[6], ans2[6];
+  static double rbk, amg, den, denm;
+  complex double a1, a2, as1, as2, del, aa;
+  complex double q1[6][20], q2[6][20], ans1[6], ans2[6];
 
   rbk=creal(bk);
   del=dela;
@@ -599,7 +597,7 @@ void gshank( complex long double start, complex long double dela,
 
 	  q1[i][intx-1]=as1;
 	  q2[i][intx-1]=as2;
-	  amg=fabsl(creal(as2))+fabsl(cimag(as2));
+	  amg=fabs(creal(as2))+fabs(cimag(as2));
 	  if(amg > den)
 		den=amg;
 
@@ -616,11 +614,11 @@ void gshank( complex long double start, complex long double dela,
 	  for( i = 0; i < nans; i++ )
 	  {
 		a1=q2[i][j];
-		den=(fabsl(creal(a1))+fabsl(cimag(a1)))*CRIT;
+		den=(fabs(creal(a1))+fabs(cimag(a1)))*CRIT;
 		if(den < denm)
 		  den=denm;
 		a1=q1[i][j]-a1;
-		amg=fabsl(creal(a1)+fabsl(cimag(a1)));
+		amg=fabs(creal(a1)+fabs(cimag(a1)));
 		if(amg > den)
 		{
 		  brk = TRUE;
@@ -650,12 +648,12 @@ void gshank( complex long double start, complex long double dela,
 
 /* hankel evaluates hankel function of the first kind,   */
 /* order zero, and its derivative for complex argument z */
-void hankel( complex long double z, complex long double *h0, complex long double *h0p )
+void hankel( complex double z, complex double *h0, complex double *h0p )
 {
   int k, ib;
   static int m[101], init = FALSE;
-  static long double a1[25], a2[25], a3[25], a4[25], psi, tst, zms;
-  complex long double clogz, j0, j0p, p0z, p1z, q0z, q1z, y0=CPLX_00, y0p=CPLX_00, zi, zi2, zk;
+  static double a1[25], a2[25], a3[25], a4[25], psi, tst, zms;
+  complex double clogz, j0, j0p, p0z, p1z, q0z, q1z, y0=CPLX_00, y0p=CPLX_00, zi, zi2, zk;
 
   /* initialization of constants */
   if( ! init )
@@ -689,7 +687,7 @@ void hankel( complex long double z, complex long double *h0, complex long double
 
   } /* if( ! init ) */
 
-  zms=z*conj(z);
+  zms=creal(z*conj(z));
   if(zms == 0.)
 	abort_on_error(-7);
 
@@ -700,7 +698,7 @@ void hankel( complex long double z, complex long double *h0, complex long double
 	  ib=1;
 
 	/* series expansion */
-	int iz=zms;
+	int iz=(int)zms;
 	int miz=m[iz];
 	j0=CPLX_10;
 	j0p=j0;
@@ -719,7 +717,7 @@ void hankel( complex long double z, complex long double *h0, complex long double
 	}
 
 	j0p *= -.5*z;
-	clogz=clogl(.5*z);
+	clogz=clog(.5*z);
 	y0=(2.*j0*clogz-y0)/PI+C2;
 	y0p=(2./z+2.*j0p*clogz+.5*y0p*z)/PI+C1*z;
 	*h0=j0+CPLX_01*y0;
@@ -740,14 +738,14 @@ void hankel( complex long double z, complex long double *h0, complex long double
   p1z=1.+(P11-P21*zi2)*zi2;
   q0z=(Q20*zi2-Q10)*zi;
   q1z=(Q11-Q21*zi2)*zi;
-  zk=cexp(CPLX_01*(z-POF))*csqrtl(zi)*C3;
+  zk=cexp(CPLX_01*(z-POF))*csqrt(zi)*C3;
   *h0=zk*(p0z+CPLX_01*q0z);
   *h0p=CPLX_01*zk*(p1z+CPLX_01*q1z);
 
   if(ib == 0)
 	return;
 
-  zms=cosl((sqrtl(zms)-4.)*31.41592654);
+  zms=cos((sqrt(zms)-4.)*31.41592654);
   *h0=.5*(y0*(1.+zms)+ *h0*(1.-zms));
   *h0p=.5*(y0p*(1.+zms)+ *h0p*(1.-zms));
 
@@ -757,7 +755,7 @@ void hankel( complex long double z, complex long double *h0, complex long double
 /*-----------------------------------------------------------------------*/
 
 /* compute integration parameter xlam=lambda from parameter t. */
-void lambda( long double t, complex long double *xlam, complex long double *dxlam )
+void lambda( double t, complex double *xlam, complex double *dxlam )
 {
   *dxlam=b-a;
   *xlam=a+*dxlam*t;
@@ -768,12 +766,12 @@ void lambda( long double t, complex long double *xlam, complex long double *dxla
 
 /* rom1 integrates the 6 sommerfeld integrals from a to b in lambda. */
 /* the method of variable interval width romberg integration is used. */
-void rom1( int n, complex long double *sum, int nx )
+void rom1( int n, complex double *sum, int nx )
 {
   int jump, lstep, nogo, i, ns, nt;
-  static long double z, ze, s, ep, zend, dz=0., dzot=0., tr, ti;
-  static complex long double t00, t11, t02;
-  static complex long double g1[6], g2[6], g3[6], g4[6], g5[6], t01[6], t10[6], t20[6];
+  static double z, ze, s, ep, zend, dz=0., dzot=0., tr, ti;
+  static complex double t00, t11, t02;
+  static complex double g1[6], g2[6], g3[6], g4[6], g5[6], t01[6], t10[6], t20[6];
 
   lstep=0;
   z=0.;
@@ -933,10 +931,10 @@ void rom1( int n, complex long double *sum, int nx )
 
 /* saoa computes the integrand for each of the 6 sommerfeld */
 /* integrals for source and observer above ground */
-void saoa( long double t, complex long double *ans)
+void saoa( double t, complex double *ans)
 {
-  long double xlr;
-  static complex long double xl, dxl, cgam1, cgam2, b0, b0p, com, dgam, den1, den2;
+  double xlr;
+  static complex double xl, dxl, cgam1, cgam2, b0, b0p, com, dgam, den1, den2;
 
   lambda(t, &xl, &dxl);
   if( jh == 0 )
@@ -945,31 +943,31 @@ void saoa( long double t, complex long double *ans)
 	bessel(xl*rho, &b0, &b0p);
 	b0  *=2.;
 	b0p *=2.;
-	cgam1=csqrtl(xl*xl-ck1sq);
-	cgam2=csqrtl(xl*xl-ck2sq);
+	cgam1=csqrt(xl*xl-ck1sq);
+	cgam2=csqrt(xl*xl-ck2sq);
 	if(creal(cgam1) == 0.)
-	  cgam1=cmplx(0.,-fabsl(cimag(cgam1)));
+	  cgam1=cmplx(0.,-fabs(cimag(cgam1)));
 	if(creal(cgam2) == 0.)
-	  cgam2=cmplx(0.,-fabsl(cimag(cgam2)));
+	  cgam2=cmplx(0.,-fabs(cimag(cgam2)));
   }
   else
   {
 	/* hankel function form */
 	hankel(xl*rho, &b0, &b0p);
 	com=xl-ck1;
-	cgam1=csqrtl(xl+ck1)*csqrtl(com);
+	cgam1=csqrt(xl+ck1)*csqrt(com);
 	if(creal(com) < 0. && cimag(com) >= 0.)
 	  cgam1=-cgam1;
 	com=xl-ck2;
-	cgam2=csqrtl(xl+ck2)*csqrtl(com);
+	cgam2=csqrt(xl+ck2)*csqrt(com);
 	if(creal(com) < 0. && cimag(com) >= 0.)
 	  cgam2=-cgam2;
   }
 
-  xlr=xl*conj(xl);
+  xlr=creal(xl*conj(xl));
   if(xlr >= tsmag)
   {
-	long double sign;
+	double sign;
 	if(cimag(xl) >= 0.)
 	{
 	  xlr=creal(xl);

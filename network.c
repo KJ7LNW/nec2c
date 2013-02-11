@@ -24,37 +24,22 @@
 *******************************************************************/
 
 #include "nec2c.h"
-
-/* common  /netcx/ */
-extern netcx_t netcx;
-
-/* common  /vsorc/ */
-extern vsorc_t vsorc;
-
-/* common  /data/ */
-extern data_t data;
-
-/* common  /crnt/ */
-extern crnt_t crnt;
-
-/* pointers to input/output files */
-extern FILE *input_fp, *output_fp, *plot_fp;
+#include "shared.h"
 
 /*-------------------------------------------------------------------*/
-
 
 /* subroutine netwk solves for structure currents for a given */
 /* excitation including the effect of non-radiating networks if */
 /* present. */
-void netwk( complex long double *cm, int *ip, complex long double *einc )
+void netwk( complex double *cm, int *ip, complex double *einc )
 {
   int *ipnt = NULL, *nteqa = NULL, *ntsca = NULL;
   int nteq=0, ntsc=0, irow2=0, j, ndimn;
   int neqt, irow1=0, i, isc1=0;
   size_t mreq;
-  long double pwr;
-  complex long double *vsrc = NULL, *rhs = NULL, *cmn = NULL;
-  complex long double *rhnt = NULL, *rhnx = NULL, ymit, vlt, cux;
+  double pwr;
+  complex double *vsrc = NULL, *rhs = NULL, *cmn = NULL;
+  complex double *rhnt = NULL, *rhnx = NULL, ymit, vlt, cux=CPLX_00;
 
   netcx.pin=0.;
   netcx.pnls=0.;
@@ -64,26 +49,32 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
   /* Allocate network buffers */
   if( netcx.nonet != 0 )
   {
-	mreq = data.np3m * sizeof(complex long double);
+	mreq = (size_t)data.np3m;
+	mreq *= sizeof(complex double);
 	mem_alloc( (void *)&rhs, mreq );
 
-	mreq = j * sizeof(complex long double);
+	mreq = (size_t)j;
+	mreq *= sizeof(complex double);
 	mem_alloc( (void *)&rhnt, mreq );
 	mem_alloc( (void *)&rhnx, mreq );
-	mem_alloc( (void *)&cmn, mreq * j );
+	mreq *= (size_t)j;
+	mem_alloc( (void *)&cmn, mreq );
 
-	mreq = j * sizeof(int);
+	mreq = (size_t)j;
+	mreq *= sizeof(int);
 	mem_alloc( (void *)&ntsca, mreq );
 	mem_alloc( (void *)&nteqa, mreq );
 	mem_alloc( (void *)&ipnt, mreq );
 
-	mreq = vsorc.nsant * sizeof(complex long double);
+	mreq = (size_t)vsorc.nsant;
+	mreq *= sizeof(complex double);
 	mem_alloc( (void *)&vsrc, mreq );
   }
   else
 	if( netcx.masym != 0)
 	{
-	  mreq = j * sizeof(int);
+	  mreq = (size_t)j;
+	  mreq *= sizeof(int);
 	  mem_alloc( (void *)&ipnt, mreq );
 	}
 
@@ -96,7 +87,6 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 	  irow1=0;
 	  if( netcx.nonet != 0)
 	  {
-		int nseg1;
 		for( i = 0; i < netcx.nonet; i++ )
 		{
 		  nseg1= netcx.iseg1[i];
@@ -156,7 +146,7 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 
 	  if( irow1 >= 2)
 	  {
-		long double asmx, asa;
+		double asmx, asa;
 		for( i = 0; i < irow1; i++ )
 		{
 		  isc1= ipnt[i]-1;
@@ -186,7 +176,7 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 		  for( j = 0; j < isc1; j++ )
 		  {
 			cux= cmn[i+j*ndimn];
-			pwr= cabsl(( cux- cmn[j+i*ndimn])/ cux);
+			pwr= cabs(( cux- cmn[j+i*ndimn])/ cux);
 			asa += pwr* pwr;
 
 			if( pwr < asmx)
@@ -200,11 +190,11 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 
 		} /* for( i = 1; i < irow1; i++ ) */
 
-		asa= sqrtl( asa*2./ (long double)( irow1*( irow1-1)));
+		asa= sqrt( asa*2./ (double)( irow1*( irow1-1)));
 		fprintf( output_fp, "\n\n"
 			"   MAXIMUM RELATIVE ASYMMETRY OF THE DRIVING POINT ADMITTANCE\n"
-			"   MATRIX IS %10.3LE FOR SEGMENTS %d AND %d\n"
-			"   RMS RELATIVE ASYMMETRY IS %10.3LE",
+			"   MATRIX IS %10.3E FOR SEGMENTS %d AND %d\n"
+			"   RMS RELATIVE ASYMMETRY IS %10.3E",
 			asmx, nteq, ntsc, asa );
 
 	  } /* if( irow1 >= 2) */
@@ -228,8 +218,8 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 
 	  for( j = 0; j < netcx.nonet; j++ )
 	  {
-		int jump1, jump2, isc2, nseg2;
-		long double y11r, y11i, y12r, y12i, y22r, y22i;
+		int jump1, jump2, isc2=0, nseg2;
+		double y11r, y11i, y12r, y12i, y22r, y22i;
 
 		nseg1= netcx.iseg1[j];
 		nseg2= netcx.iseg2[j];
@@ -247,9 +237,9 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 		{
 		  y22r= TP* netcx.x11i[j]/ data.wlam;
 		  y12r=0.;
-		  y12i=1./( netcx.x11r[j]* sinl( y22r));
+		  y12i=1./( netcx.x11r[j]* sin( y22r));
 		  y11r= netcx.x12r[j];
-		  y11i= -y12i* cosl( y22r);
+		  y11i= -y12i* cos( y22r);
 		  y22r= netcx.x22r[j];
 		  y22i= y11i+ netcx.x22i[j];
 		  y11i= y11i+ netcx.x12i[j];
@@ -493,15 +483,15 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 	  ymit= cux/ vlt;
 	  netcx.zped= vlt/ cux;
 	  irow2= data.itag[irow1];
-	  pwr=.5* creall( vlt* conjl( cux));
+	  pwr=.5* creal( vlt* conj( cux));
 	  netcx.pnls= netcx.pnls- pwr;
 
 	  if( netcx.nprint == 0)
 		fprintf( output_fp, "\n"
-			" %4d %5d %11.4LE %11.4LE %11.4LE %11.4LE"
-			" %11.4LE %11.4LE %11.4LE %11.4LE %11.4LE",
-			irow2, irow1+1, creall(vlt), cimagl(vlt), creall(cux), cimagl(cux),
-			creall(netcx.zped), cimagl(netcx.zped), creall(ymit), cimagl(ymit), pwr );
+			" %4d %5d %11.4E %11.4E %11.4E %11.4E"
+			" %11.4E %11.4E %11.4E %11.4E %11.4E",
+			irow2, irow1+1, creal(vlt), cimag(vlt), creal(cux), cimag(cux),
+			creal(netcx.zped), cimag(netcx.zped), creal(ymit), cimag(ymit), pwr );
 	}
 
 	if( ntsc != 0)
@@ -514,15 +504,15 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 		ymit= cux/ vlt;
 		netcx.zped= vlt/ cux;
 		irow2= data.itag[irow1];
-		pwr=.5* creall( vlt* conjl( cux));
+		pwr=.5* creal( vlt* conj( cux));
 		netcx.pnls= netcx.pnls- pwr;
 
 		if( netcx.nprint == 0)
 		  fprintf( output_fp, "\n"
-			  " %4d %5d %11.4LE %11.4LE %11.4LE %11.4LE"
-			  " %11.4LE %11.4LE %11.4LE %11.4LE %11.4LE",
-			  irow2, irow1+1, creall(vlt), cimagl(vlt), creall(cux), cimagl(cux),
-			  creall(netcx.zped), cimagl(netcx.zped), creall(ymit), cimagl(ymit), pwr );
+			  " %4d %5d %11.4E %11.4E %11.4E %11.4E"
+			  " %11.4E %11.4E %11.4E %11.4E %11.4E",
+			  irow2, irow1+1, creal(vlt), cimag(vlt), creal(cux), cimag(cux),
+			  creal(netcx.zped), cimag(netcx.zped), creal(ymit), cimag(ymit), pwr );
 
 	  } /* for( i = 0; i < ntsc; i++ ) */
 
@@ -584,7 +574,7 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 
 	  ymit= cux/ vlt;
 	  netcx.zped= vlt/ cux;
-	  pwr=.5* creall( vlt* conjl( cux));
+	  pwr=.5* creal( vlt* conj( cux));
 	  netcx.pin= netcx.pin+ pwr;
 
 	  if( irow1 != 0)
@@ -592,10 +582,10 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 
 	  irow2= data.itag[isc1];
 	  fprintf( output_fp, "\n"
-		  " %4d %5d %11.4LE %11.4LE %11.4LE %11.4LE"
-		  " %11.4LE %11.4LE %11.4LE %11.4LE %11.4LE",
-		  irow2, isc1+1, creall(vlt), cimagl(vlt), creall(cux), cimagl(cux),
-		  creall(netcx.zped), cimagl(netcx.zped), creall(ymit), cimagl(ymit), pwr );
+		  " %4d %5d %11.4E %11.4E %11.4E %11.4E"
+		  " %11.4E %11.4E %11.4E %11.4E %11.4E",
+		  irow2, isc1+1, creal(vlt), cimag(vlt), creal(cux), cimag(cux),
+		  creal(netcx.zped), cimag(netcx.zped), creal(ymit), cimag(ymit), pwr );
 
 	} /* for( i = 0; i < vsorc.nsant; i++ ) */
 
@@ -610,18 +600,18 @@ void netwk( complex long double *cm, int *ip, complex long double *einc )
 	  ymit= cmplx( crnt.bir[isc1], crnt.bii[isc1]);
 	  netcx.zped= cmplx( crnt.cir[isc1], crnt.cii[isc1]);
 	  pwr= data.si[isc1]* TP*.5;
-	  cux=( cux- ymit* sinl( pwr)+ netcx.zped* cosl( pwr))* data.wlam;
+	  cux=( cux- ymit* sin( pwr)+ netcx.zped* cos( pwr))* data.wlam;
 	  ymit= cux/ vlt;
 	  netcx.zped= vlt/ cux;
-	  pwr=.5* creall( vlt* conjl( cux));
+	  pwr=.5* creal( vlt* conj( cux));
 	  netcx.pin= netcx.pin+ pwr;
 	  irow2= data.itag[isc1];
 
 	  fprintf( output_fp,	"\n"
-		  " %4d %5d %11.4LE %11.4LE %11.4LE %11.4LE"
-		  " %11.4LE %11.4LE %11.4LE %11.4LE %11.4LE",
-		  irow2, isc1+1, creall(vlt), cimagl(vlt), creall(cux), cimagl(cux),
-		  creall(netcx.zped), cimagl(netcx.zped), creall(ymit), cimagl(ymit), pwr );
+		  " %4d %5d %11.4E %11.4E %11.4E %11.4E"
+		  " %11.4E %11.4E %11.4E %11.4E %11.4E",
+		  irow2, isc1+1, creal(vlt), cimag(vlt), creal(cux), cimag(cux),
+		  creal(netcx.zped), cimag(netcx.zped), creal(ymit), cimag(ymit), pwr );
 
 	} /* for( i = 0; i < vsorc.nvqd; i++ ) */
 

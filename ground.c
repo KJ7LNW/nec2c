@@ -24,24 +24,7 @@
  *******************************************************************/
 
 #include "nec2c.h"
-
-/* pointers to input/output files */
-extern FILE *input_fp, *output_fp, *plot_fp;
-
-/* common  /data/ */
-extern data_t data;
-
-/* common  /dataj/ */
-extern dataj_t dataj;
-
-/* common  /incom/ */
-incom_t incom;;
-
-/* common  /gwav/ */
-extern gwav_t gwav;
-
-/* common  /gnd/ */
-extern gnd_t gnd;
+#include "shared.h"
 
 /*-------------------------------------------------------------------*/
 
@@ -49,15 +32,15 @@ extern gnd_t gnd;
 /* variable interval width romberg integration is used.  there are 9 */
 /* field components - the x, y, and z components due to constant, */
 /* sine, and cosine current distributions. */
-void rom2( long double a, long double b, complex long double *sum, long double dmin )
+void rom2( double a, double b, complex double *sum, double dmin )
 {
   int i, ns, nt, flag=TRUE;
   int nts = 4, nx = 1, n = 9;
-  long double ze, ep, zend, dz=0., dzot=0., tmag1, tmag2, tr, ti;
-  long double z, s; /***also global***/
-  long double rx = 1.0e-4;
-  complex long double g1[9], g2[9], g3[9], g4[9], g5[9];
-  complex long double t00, t01[9], t10[9], t02, t11, t20[9];
+  double ze, ep, zend, dz=0., dzot=0., tmag1, tmag2, tr, ti;
+  double z, s; /***also global***/
+  double rx = 1.0e-4;
+  complex double g1[9], g2[9], g3[9], g4[9], g5[9];
+  complex double t00, t01[9], t10[9], t02, t11, t20[9];
 
   z= a;
   ze= b;
@@ -118,8 +101,8 @@ void rom2( long double a, long double b, complex long double *sum, long double d
 
 	} /* for( i = 0; i < n; i++ ) */
 
-	tmag1= sqrtl( tmag1);
-	tmag2= sqrtl( tmag2);
+	tmag1= sqrt( tmag1);
+	tmag2= sqrt( tmag2);
 	test( tmag1, tmag2, &tr, 0., 0., &ti, dmin);
 
 	if( tr <= rx)
@@ -168,8 +151,8 @@ void rom2( long double a, long double b, complex long double *sum, long double d
 
 	} /* for( i = 0; i < n; i++ ) */
 
-	tmag1= sqrtl( tmag1);
-	tmag2= sqrtl( tmag2);
+	tmag1= sqrt( tmag1);
+	tmag2= sqrt( tmag2);
 	test( tmag1, tmag2, &tr, 0.,0., &ti, dmin);
 
 	if( tr > rx)
@@ -193,7 +176,7 @@ void rom2( long double a, long double b, complex long double *sum, long double d
 	  } /* if( ns < npm) */
 
 	  fprintf( output_fp,
-		  "\n  ROM2 -- STEP SIZE LIMITED AT Z = %12.5LE", z );
+		  "\n  ROM2 -- STEP SIZE LIMITED AT Z = %12.5E", z );
 
 	} /* if( tr > rx) */
 
@@ -223,11 +206,11 @@ void rom2( long double a, long double b, complex long double *sum, long double d
 
 /* sfldx returns the field due to ground for a current element on */
 /* the source segment at t relative to the segment center. */
-void sflds( long double t, complex long double *e )
+void sflds( double t, complex double *e )
 {
-  long double xt, yt, zt, rhx, rhy, rhs, rho, phx, phy;
-  long double cph, sph, zphs, r2s, rk, sfac, thet;
-  complex long double  erv, ezv, erh, ezh, eph, er, et, hrv, hzv, hrh;
+  double xt, yt, zt, rhx, rhy, rhs, rho, phx, phy;
+  double cph, sph, zphs, r2s, rk, sfac, thet;
+  complex double  erv, ezv, erh, ezh, eph, er, et, hrv, hzv, hrh;
 
   xt= dataj.xj+ t* dataj.cabj;
   yt= dataj.yj+ t* dataj.sabj;
@@ -235,7 +218,7 @@ void sflds( long double t, complex long double *e )
   rhx= incom.xo- xt;
   rhy= incom.yo- yt;
   rhs= rhx* rhx+ rhy* rhy;
-  rho= sqrtl( rhs);
+  rho= sqrt( rhs);
 
   if( rho <= 0.)
   {
@@ -255,17 +238,17 @@ void sflds( long double t, complex long double *e )
   cph= rhx* incom.xsn+ rhy* incom.ysn;
   sph= rhy* incom.xsn- rhx* incom.ysn;
 
-  if( fabsl( cph) < 1.0e-10)
+  if( fabs( cph) < 1.0e-10)
 	cph=0.;
-  if( fabsl( sph) < 1.0e-10)
+  if( fabs( sph) < 1.0e-10)
 	sph=0.;
 
   gwav.zph= incom.zo+ zt;
   zphs= gwav.zph* gwav.zph;
   r2s= rhs+ zphs;
-  gwav.r2= sqrtl( r2s);
+  gwav.r2= sqrt( r2s);
   rk= gwav.r2* TP;
-  gwav.xx2= cmplx( cosl( rk),- sinl( rk));
+  gwav.xx2= cmplx( cos( rk),- sin( rk));
 
   /* use norton approximation for field due to ground.  current is */
   /* lumped at segment center with current moment for constant, sine, */
@@ -301,7 +284,7 @@ void sflds( long double t, complex long double *e )
 	e[4]=0.;
 	e[5]=0.;
 	sfac= PI* dataj.s;
-	sfac= sinl( sfac)/ sfac;
+	sfac= sin( sfac)/ sfac;
 	e[6]= e[0]* sfac;
 	e[7]= e[1]* sfac;
 	e[8]= e[2]* sfac;
@@ -311,7 +294,7 @@ void sflds( long double t, complex long double *e )
 
   /* interpolate in sommerfeld field tables */
   if( rho >= 1.0e-12)
-	thet= atanl( gwav.zph/ rho);
+	thet= atan( gwav.zph/ rho);
   else
 	thet= POT;
 
@@ -329,12 +312,12 @@ void sflds( long double t, complex long double *e )
   e[2]= ezh;
   /* x,y,z fields for sine current */
   rk= TP* t;
-  sfac= sinl( rk);
+  sfac= sin( rk);
   e[3]= e[0]* sfac;
   e[4]= e[1]* sfac;
   /* x,y,z fields for cosine current */
   e[5]= e[2]* sfac;
-  sfac= cosl( rk);
+  sfac= cos( rk);
   e[6]= e[0]* sfac;
   e[7]= e[1]* sfac;
   e[8]= e[2]* sfac;

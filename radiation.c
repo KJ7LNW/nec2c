@@ -24,56 +24,32 @@
  ******************************************************************/
 
 #include "nec2c.h"
-
-/* common  /data/ */
-extern data_t data;
-
-/* common  /gnd/ */
-extern gnd_t gnd;
-
-/* common  /crnt/ */
-extern crnt_t crnt;
-
-/* common  /gwav/ */
-extern gwav_t gwav;
-
-/* common  /fpat/ */
-extern fpat_t fpat;
-
-/* pointers to input/output files */
-extern FILE *input_fp, *output_fp, *plot_fp;
-
-/* common  /save/ */
-extern save_t save;
-
-/* common  /plot/ */
-extern plot_t plot;
-
+#include "shared.h"
 
 /*-----------------------------------------------------------------------*/
 
 /* ffld calculates the far zone radiated electric fields, */
 /* the factor exp(j*k*r)/(r/lamda) not included */
-void ffld( long double thet, long double phi,
-	complex long double *eth, complex long double *eph )
+void ffld( double thet, double phi,
+	complex double *eth, complex double *eph )
 {
   int k, i, ip, jump;
-  long double phx, phy, roz, rozs, thx, thy, thz, rox, roy;
-  long double tthet=0., darg=0., omega, el, sill, top, bot, a;
-  long double too, boo, b, c, d, rr, ri, arg, dr, rfl, rrz;
-  complex long double cix=CPLX_00, ciy=CPLX_00, ciz=CPLX_00;
-  complex long double exa, ccx=CPLX_00, ccy=CPLX_00, ccz=CPLX_00, cdp;
-  complex long double zrsin, rrv=CPLX_00, rrh=CPLX_00, rrv1=CPLX_00;
-  complex long double rrh1=CPLX_00, rrv2=CPLX_00, rrh2=CPLX_00;
-  complex long double tix, tiy, tiz, zscrn, ex=CPLX_00, ey=CPLX_00, ez=CPLX_00, gx, gy, gz;
+  double phx, phy, roz, rozs, thx, thy, thz, rox, roy;
+  double tthet=0., darg=0., omega, el, sill, top, bot, a;
+  double too, boo, b, c, d, rr, ri, arg, dr, rfl, rrz;
+  complex double cix=CPLX_00, ciy=CPLX_00, ciz=CPLX_00;
+  complex double exa, ccx=CPLX_00, ccy=CPLX_00, ccz=CPLX_00, cdp;
+  complex double zrsin, rrv=CPLX_00, rrh=CPLX_00, rrv1=CPLX_00;
+  complex double rrh1=CPLX_00, rrv2=CPLX_00, rrh2=CPLX_00;
+  complex double tix, tiy, tiz, zscrn, ex=CPLX_00, ey=CPLX_00, ez=CPLX_00, gx, gy, gz;
 
-  phx= -sinl( phi);
-  phy= cosl( phi);
-  roz= cosl( thet);
+  phx= -sin( phi);
+  phy= cos( phi);
+  roz= cos( thet);
   rozs= roz;
   thx= roz* phy;
   thy= -roz* phx;
-  thz= -sinl( thet);
+  thz= -sin( thet);
   rox= -thz* phy;
   roy= thz* phx;
 
@@ -95,7 +71,7 @@ void ffld( long double thet, long double phi,
 		else
 		{
 		  /* for infinite planar ground */
-		  zrsin= csqrtl(1.- gnd.zrati* gnd.zrati* thz* thz);
+		  zrsin= csqrt(1.- gnd.zrati* gnd.zrati* thz* thz);
 		  rrv=-( roz- gnd.zrati* zrsin)/( roz+ gnd.zrati* zrsin);
 		  rrh=( gnd.zrati* roz- zrsin)/( gnd.zrati* roz+ zrsin);
 
@@ -106,11 +82,11 @@ void ffld( long double thet, long double phi,
 		{
 		  rrv1= rrv;
 		  rrh1= rrh;
-		  tthet= tanl( thet);
+		  tthet= tan( thet);
 
 		  if( gnd.ifar != 4)
 		  {
-			zrsin= csqrtl(1.- gnd.zrati2* gnd.zrati2* thz* thz);
+			zrsin= csqrt(1.- gnd.zrati2* gnd.zrati2* thz* thz);
 			rrv2=-( roz- gnd.zrati2* zrsin)/( roz+ gnd.zrati2* zrsin);
 			rrh2=( gnd.zrati2* roz- zrsin)/( gnd.zrati2* roz+ zrsin);
 			darg= -TP*2.* gnd.ch* roz;
@@ -137,18 +113,18 @@ void ffld( long double thet, long double phi,
 		top= el+ sill;
 		bot= el- sill;
 
-		if( fabsl( omega) >= 1.0e-7)
-		  a=2.* sinl( sill)/ omega;
+		if( fabs( omega) >= 1.0e-7)
+		  a=2.* sin( sill)/ omega;
 		else
 		  a=(2.- omega* omega* el* el/3.)* el;
 
-		if( fabsl( top) >= 1.0e-7)
-		  too= sinl( top)/ top;
+		if( fabs( top) >= 1.0e-7)
+		  too= sin( top)/ top;
 		else
 		  too=1.- top* top/6.;
 
-		if( fabsl( bot) >= 1.0e-7)
-		  boo= sinl( bot)/ bot;
+		if( fabs( bot) >= 1.0e-7)
+		  boo= sin( bot)/ bot;
 		else
 		  boo=1.- bot* bot/6.;
 
@@ -161,7 +137,7 @@ void ffld( long double thet, long double phi,
 		if( (k != 1) || (gnd.ifar < 2) )
 		{
 		  /* summation for far field integral */
-		  exa= cmplx( cosl( arg), sinl( arg))* cmplx( rr, ri);
+		  exa= cmplx( cos( arg), sin( arg))* cmplx( rr, ri);
 		  cix= cix+ exa* data.cab[i];
 		  ciy= ciy+ exa* data.sab[i];
 		  ciz= ciz+ exa* data.salp[i];
@@ -191,7 +167,7 @@ void ffld( long double thet, long double phi,
 		} /* if( gnd.ifar == 2) */
 		else
 		{
-		  d= sqrtl( d*d + (data.y[i]-dr*phx)*(data.y[i]-dr*phx) );
+		  d= sqrt( d*d + (data.y[i]-dr*phx)*(data.y[i]-dr*phx) );
 		  if( gnd.ifar == 3)
 		  {
 			if(( gnd.cl- d) > 0.)
@@ -212,9 +188,9 @@ void ffld( long double thet, long double phi,
 			{
 			  /* radial wire ground screen reflection coefficient */
 			  d= d+ gnd.t2;
-			  zscrn= gnd.t1* d* logl( d/ gnd.t2);
+			  zscrn= gnd.t1* d* log( d/ gnd.t2);
 			  zscrn=( zscrn* gnd.zrati)/( ETA* gnd.zrati+ zscrn);
-			  zrsin= csqrtl(1.- zscrn* zscrn* thz* thz);
+			  zrsin= csqrt(1.- zscrn* zscrn* thz* thz);
 			  rrv=( roz+ zscrn* zrsin)/(- roz+ zscrn* zrsin);
 			  rrh=( zscrn* roz+ zrsin)/( zscrn* roz- zrsin);
 			} /* if(( gnd.scrwl- d) < 0.) */
@@ -252,7 +228,7 @@ void ffld( long double thet, long double phi,
 
 		/* contribution of each image segment modified by */
 		/* reflection coef, for cliff and ground screen problems */
-		exa= cmplx( cosl( arg), sinl( arg))* cmplx( rr, ri);
+		exa= cmplx( cos( arg), sin( arg))* cmplx( rr, ri);
 		tix= exa* data.cab[i];
 		tiy= exa* data.sab[i];
 		tiz= exa* data.salp[i];
@@ -326,7 +302,7 @@ void ffld( long double thet, long double phi,
 	}
 	else
 	{
-	  rrv= csqrtl(1.- gnd.zrati* gnd.zrati* thz* thz);
+	  rrv= csqrt(1.- gnd.zrati* gnd.zrati* thz* thz);
 	  rrh= gnd.zrati* roz;
 	  rrh=( rrh- rrv)/( rrh+ rrv);
 	  rrv= gnd.zrati* rrv;
@@ -357,14 +333,14 @@ void ffld( long double thet, long double phi,
 
 /* calculates the xyz components of the electric */
 /* field due to surface currents */
-void fflds( long double rox, long double roy, long double roz,
-	complex long double *scur, complex long double *ex,
-	complex long double *ey, complex long double *ez )
+void fflds( double rox, double roy, double roz,
+	complex double *scur, complex double *ex,
+	complex double *ey, complex double *ez )
 {
-  long double *xs, *ys, *zs, *s;
+  double *xs, *ys, *zs, *s;
   int j, i, k;
-  long double arg;
-  complex long double ct;
+  double arg;
+  complex double ct;
 
   xs = data.px;
   ys = data.py;
@@ -380,7 +356,7 @@ void fflds( long double rox, long double roy, long double roz,
   {
 	i++;
 	arg= TP*( rox* xs[i]+ roy* ys[i]+ roz* zs[i]);
-	ct= cmplx( cosl( arg)* s[i], sinl( arg)* s[i]);
+	ct= cmplx( cos( arg)* s[i], sin( arg)* s[i]);
 	k=3*j;
 	*ex += scur[k  ]* ct;
 	*ey += scur[k+1]* ct;
@@ -398,29 +374,29 @@ void fflds( long double rox, long double roy, long double roz,
 /*-----------------------------------------------------------------------*/
 
 /* gfld computes the radiated field including ground wave. */
-void gfld( long double rho, long double phi, long double rz,
-	complex long double *eth, complex long double *epi,
-	complex long double *erd, complex long double ux, int ksymp )
+void gfld( double rho, double phi, double rz,
+	complex double *eth, complex double *epi,
+	complex double *erd, complex double ux, int ksymp )
 {
   int i, k;
-  long double b, r, thet, arg, phx, phy, rx, ry, dx, dy, dz, rix, riy, rhs, rhp;
-  long double rhx, rhy, calp, cbet, sbet, cph, sph, el, rfl, riz, thx, thy, thz;
-  long double rxyz, rnx, rny, rnz, omega, sill, top, bot, a, too, boo, c, rr, ri;
-  complex long double cix, ciy, ciz, exa, erv;
-  complex long double ezv, erh, eph, ezh, ex, ey;
+  double b, r, thet, arg, phx, phy, rx, ry, dx, dy, dz, rix, riy, rhs, rhp;
+  double rhx, rhy, calp, cbet, sbet, cph, sph, el, rfl, riz, thx, thy, thz;
+  double rxyz, rnx, rny, rnz, omega, sill, top, bot, a, too, boo, c, rr, ri;
+  complex double cix, ciy, ciz, exa, erv;
+  complex double ezv, erh, eph, ezh, ex, ey;
 
-  r= sqrtl( rho*rho+ rz*rz );
+  r= sqrt( rho*rho+ rz*rz );
   if( (ksymp == 1) || (cabs(ux) > .5) || (r > 1.e5) )
   {
 	/* computation of space wave only */
 	if( rz >= 1.0e-20)
-	  thet= atanl( rho/ rz);
+	  thet= atan( rho/ rz);
 	else
 	  thet= PI*.5;
 
 	ffld( thet, phi, eth, epi);
 	arg= -TP* r;
-	exa= cmplx( cosl( arg), sinl( arg))/ r;
+	exa= cmplx( cos( arg), sin( arg))/ r;
 	*eth= *eth* exa;
 	*epi= *epi* exa;
 	*erd=CPLX_00;
@@ -430,8 +406,8 @@ void gfld( long double rho, long double phi, long double rz,
   /* computation of space and ground waves. */
   gwav.u= ux;
   gwav.u2= gwav.u* gwav.u;
-  phx= -sinl( phi);
-  phy= cosl( phi);
+  phx= -sin( phi);
+  phy= cos( phi);
   rx= rho* phy;
   ry= -rho* phx;
   cix=CPLX_00;
@@ -447,7 +423,7 @@ void gfld( long double rho, long double phi, long double rz,
 	rix= rx- data.x[i];
 	riy= ry- data.y[i];
 	rhs= rix* rix+ riy* riy;
-	rhp= sqrtl( rhs);
+	rhp= sqrt( rhs);
 
 	if( rhp >= 1.0e-6)
 	{
@@ -463,7 +439,7 @@ void gfld( long double rho, long double phi, long double rz,
 	calp=1.- dz* dz;
 	if( calp >= 1.0e-6)
 	{
-	  calp= sqrtl( calp);
+	  calp= sqrt( calp);
 	  cbet= dx/ calp;
 	  sbet= dy/ calp;
 	  cph= rhx* cbet+ rhy* sbet;
@@ -484,7 +460,7 @@ void gfld( long double rho, long double phi, long double rz,
 	{
 	  rfl= -rfl;
 	  riz= rz- data.z[i]* rfl;
-	  rxyz= sqrtl( rix* rix+ riy* riy+ riz* riz);
+	  rxyz= sqrt( rix* rix+ riy* riy+ riz* riz);
 	  rnx= rix/ rxyz;
 	  rny= riy/ rxyz;
 	  rnz= riz/ rxyz;
@@ -493,18 +469,18 @@ void gfld( long double rho, long double phi, long double rz,
 	  top= el+ sill;
 	  bot= el- sill;
 
-	  if( fabsl( omega) >= 1.0e-7)
-		a=2.* sinl( sill)/ omega;
+	  if( fabs( omega) >= 1.0e-7)
+		a=2.* sin( sill)/ omega;
 	  else
 		a=(2.- omega* omega* el* el/3.)* el;
 
-	  if( fabsl( top) >= 1.0e-7)
-		too= sinl( top)/ top;
+	  if( fabs( top) >= 1.0e-7)
+		too= sin( top)/ top;
 	  else
 		too=1.- top* top/6.;
 
-	  if( fabsl( bot) >= 1.0e-7)
-		boo= sinl( bot)/ bot;
+	  if( fabs( bot) >= 1.0e-7)
+		boo= sin( bot)/ bot;
 	  else
 		boo=1.- bot* bot/6.;
 
@@ -513,7 +489,7 @@ void gfld( long double rho, long double phi, long double rz,
 	  rr= a* crnt.air[i]+ b* crnt.bii[i]+ c* crnt.cir[i];
 	  ri= a* crnt.aii[i]- b* crnt.bir[i]+ c* crnt.cii[i];
 	  arg= TP*( data.x[i]* rnx+ data.y[i]* rny+ data.z[i]* rnz* rfl);
-	  exa= cmplx( cosl( arg), sinl( arg))* cmplx( rr, ri)/ TP;
+	  exa= cmplx( cos( arg), sin( arg))* cmplx( rr, ri)/ TP;
 
 	  if( k != 1 )
 	  {
@@ -544,7 +520,7 @@ void gfld( long double rho, long double phi, long double rz,
   } /* for( i = 0; i < n; i++ ) */
 
   arg= -TP* r;
-  exa= cmplx( cosl( arg), sinl( arg));
+  exa= cmplx( cos( arg), sin( arg));
   cix= cix* exa;
   ciy= ciy* exa;
   ciz= ciz* exa;
@@ -574,17 +550,18 @@ void rdpat( void )
 
   char *hclif=NULL, *isens;
   int i, j, jump, itmp1, itmp2, kth, kph, itmp3, itmp4;
-  long double exrm=0., exra=0., prad, gcon, gcop, gmax, pint, tmp1, tmp2;
-  long double phi, pha, thet, tha, erdm=0., erda=0., ethm2, ethm, *gain = NULL;
-  long double etha, ephm2, ephm, epha, tilta, emajr2, eminr2, axrat;
-  long double dfaz, dfaz2, cdfaz, tstor1=0., tstor2, stilta, gnmj;
-  long double gnmn, gnv, gnh, gtot, tmp3, tmp4, da, tmp5, tmp6;
-  complex long double  eth, eph, erd;
+  double exrm=0., exra=0., prad, gcon, gcop, gmax, pint, tmp1, tmp2;
+  double phi, pha, thet, tha, erdm=0., erda=0., ethm2, ethm, *gain = NULL;
+  double etha, ephm2, ephm, epha, tilta, emajr2, eminr2, axrat;
+  double dfaz, dfaz2, cdfaz, tstor1=0., tstor2, stilta, gnmj;
+  double gnmn, gnv, gnh, gtot, tmp3, tmp4, da, tmp5, tmp6;
+  complex double  eth, eph, erd;
 
   /* Allocate memory to gain buffer */
   if( fpat.inor > 0 )
   {
-	size_t mreq = fpat.nth * fpat.nph * sizeof(long double);
+	size_t mreq = (size_t)(fpat.nth * fpat.nph);
+	mreq *= sizeof(double);
 	mem_alloc( (void *)&gain, mreq );
   }
 
@@ -603,9 +580,9 @@ void rdpat( void )
 		  "                               "
 		  "NUM OF WIRES= %d\n"
 		  "                               "
-		  "WIRE LENGTH= %8.2LF METERS\n"
+		  "WIRE LENGTH= %8.2f METERS\n"
 		  "                               "
-		  "WIRE RADIUS= %10.3LE METERS",
+		  "WIRE RADIUS= %10.3E METERS",
 		  gnd.nradl, save.scrwlt, save.scrwrt );
 
 	  if( gnd.ifar == 4)
@@ -622,21 +599,21 @@ void rdpat( void )
 
 	  gnd.cl= fpat.clt/ data.wlam;
 	  gnd.ch= fpat.cht/ data.wlam;
-	  gnd.zrati2= csqrtl(1./ cmplx( fpat.epsr2,- fpat.sig2* data.wlam*59.96));
+	  gnd.zrati2= csqrt(1./ cmplx( fpat.epsr2,- fpat.sig2* data.wlam*59.96));
 
 	  fprintf( output_fp, "\n"
 		  "                               "
 		  "--- %s CLIFF ---\n"
 		  "                               "
-		  "EDGE DISTANCE= %9.2LF METERS\n"
+		  "EDGE DISTANCE= %9.2f METERS\n"
 		  "                               "
-		  "       HEIGHT= %9.2LF METERS\n"
+		  "       HEIGHT= %9.2f METERS\n"
 		  "                               "
 		  "--- SECOND MEDIUM ---\n"
 		  "                               "
-		  "RELATIVE DIELECTRIC CONST= %10.3LF\n"
+		  "RELATIVE DIELECTRIC CONST= %10.3f\n"
 		  "                               "
-		  "      GROUND CONDUCTIVITY= %10.3LF MHOS",
+		  "      GROUND CONDUCTIVITY= %10.3f MHOS",
 		  hclif, fpat.clt, fpat.cht, fpat.epsr2, fpat.sig2 );
 
 	} /* if( ! jump ) */
@@ -668,13 +645,13 @@ void rdpat( void )
 	{
 	  exrm=1./ fpat.rfld;
 	  exra= fpat.rfld/ data.wlam;
-	  exra=-360.*( exra- floorl( exra));
+	  exra=-360.*( exra- floor( exra));
 
 	  fprintf( output_fp, "\n"
 		  "                             "
-		  "RANGE: %13.6LE METERS\n"
+		  "RANGE: %13.6E METERS\n"
 		  "                             "
-		  "EXP(-JKR)/R: %12.5LE AT PHASE: %7.2LF DEGREES\n",
+		  "EXP(-JKR)/R: %12.5E AT PHASE: %7.2f DEGREES\n",
 		  fpat.rfld, exrm, exra );
 	}
 
@@ -743,11 +720,11 @@ void rdpat( void )
 		erda= cang( erd);
 	  }
 
-	  ethm2= creal( eth* conjl( eth));
-	  ethm= sqrtl( ethm2);
+	  ethm2= creal( eth* conj( eth));
+	  ethm= sqrt( ethm2);
 	  etha= cang( eth);
-	  ephm2= creal( eph* conjl( eph));
-	  ephm= sqrtl( ephm2);
+	  ephm2= creal( eph* conj( eph));
+	  ephm= sqrt( ephm2);
 	  epha= cang( eph);
 
 	  /* elliptical polarization calc. */
@@ -769,22 +746,22 @@ void rdpat( void )
 		  else
 			dfaz2= dfaz+360.;
 
-		  if( fabsl(dfaz) > fabsl(dfaz2) )
+		  if( fabs(dfaz) > fabs(dfaz2) )
 			dfaz= dfaz2;
 
-		  cdfaz= cosl( dfaz* TA);
+		  cdfaz= cos( dfaz* TA);
 		  tstor1= ethm2- ephm2;
 		  tstor2=2.* ephm* ethm* cdfaz;
-		  tilta=.5* atan2l( tstor2, tstor1);
-		  stilta= sinl( tilta);
+		  tilta=.5* atan2( tstor2, tstor1);
+		  stilta= sin( tilta);
 		  tstor1= tstor1* stilta* stilta;
-		  tstor2= tstor2* stilta* cosl( tilta);
+		  tstor2= tstor2* stilta* cos( tilta);
 		  emajr2= -tstor1+ tstor2+ ethm2;
 		  eminr2= tstor1- tstor2+ ephm2;
 		  if( eminr2 < 0.)
 			eminr2=0.;
 
-		  axrat= sqrtl( eminr2/ emajr2);
+		  axrat= sqrt( eminr2/ emajr2);
 		  tilta= tilta* TD;
 		  if( axrat <= 1.0e-5)
 			isens= hpol[0];
@@ -845,7 +822,7 @@ void rdpat( void )
 			if( kth == fpat.nth)
 			  tmp4= tha;
 
-		  da= fabsl( tmp1*( cosl( tmp3)- cosl( tmp4)));
+		  da= fabs( tmp1*( cos( tmp3)- cos( tmp4)));
 		  if( (kph == 1) || (kph == fpat.nph) )
 			da *=.5;
 		  pint += tstor1* da;
@@ -877,8 +854,8 @@ void rdpat( void )
 		}
 
 		fprintf( output_fp, "\n"
-			" %7.2LF %9.2LF  %8.2LF %8.2LF %8.2LF %11.4LF"
-			" %9.2LF %6s %11.4LE %9.2LF %11.4LE %9.2LF",
+			" %7.2f %9.2f  %8.2f %8.2f %8.2f %11.4f"
+			" %9.2f %6s %11.4E %9.2f %11.4E %9.2f",
 			thet, phi, tmp5, tmp6, gtot, axrat,
 			tilta, isens, ethm, etha, ephm, epha );
 
@@ -890,19 +867,19 @@ void rdpat( void )
 		  if( plot.iplp2 == 1 )
 		  {
 			if( plot.iplp3 == 1 )
-			  fprintf( plot_fp, "%12.4LE %12.4LE %12.4LE\n", thet, ethm, etha );
+			  fprintf( plot_fp, "%12.4E %12.4E %12.4E\n", thet, ethm, etha );
 			else
 			  if( plot.iplp3 == 2 )
-				fprintf( plot_fp, "%12.4LE %12.4LE %12.4LE\n", thet, ephm, epha );
+				fprintf( plot_fp, "%12.4E %12.4E %12.4E\n", thet, ephm, epha );
 		  }
 
 		  if( plot.iplp2 == 2 )
 		  {
 			if( plot.iplp3 == 1 )
-			  fprintf( plot_fp, "%12.4LE %12.4LE %12.4LE\n", phi, ethm, etha );
+			  fprintf( plot_fp, "%12.4E %12.4E %12.4E\n", phi, ethm, etha );
 			else
 			  if( plot.iplp3 == 2 )
-				fprintf( plot_fp, "%12.4LE %12.4LE %12.4LE\n", phi, ephm, epha );
+				fprintf( plot_fp, "%12.4E %12.4E %12.4E\n", phi, ephm, epha );
 		  }
 		}
 
@@ -914,13 +891,13 @@ void rdpat( void )
 		  switch( plot.iplp4 )
 		  {
 			case 1:
-			  fprintf( plot_fp, "%12.4LE %12.4LE\n", thet, tmp5 );
+			  fprintf( plot_fp, "%12.4E %12.4E\n", thet, tmp5 );
 			  break;
 			case 2:
-			  fprintf( plot_fp, "%12.4LE %12.4LE\n", thet, tmp6 );
+			  fprintf( plot_fp, "%12.4E %12.4E\n", thet, tmp6 );
 			  break;
 			case 3:
-			  fprintf( plot_fp, "%12.4LE %12.4LE\n", thet, gtot );
+			  fprintf( plot_fp, "%12.4E %12.4E\n", thet, gtot );
 		  }
 		}
 
@@ -929,13 +906,13 @@ void rdpat( void )
 		  switch( plot.iplp4 )
 		  {
 			case 1:
-			  fprintf( plot_fp, "%12.4LE %12.4LE\n", phi, tmp5 );
+			  fprintf( plot_fp, "%12.4E %12.4E\n", phi, tmp5 );
 			  break;
 			case 2:
-			  fprintf( plot_fp, "%12.4LE %12.4LE\n", phi, tmp6 );
+			  fprintf( plot_fp, "%12.4E %12.4E\n", phi, tmp6 );
 			  break;
 			case 3:
-			  fprintf( plot_fp, "%12.4LE %12.4LE\n", phi, gtot );
+			  fprintf( plot_fp, "%12.4E %12.4E\n", phi, gtot );
 		  }
 		}
 
@@ -943,7 +920,7 @@ void rdpat( void )
 	  } /* if( gnd.ifar != 1) */
 
 	  fprintf( output_fp, "\n"
-		  " %9.2LF %7.2LF %9.2LF  %11.4LE %7.2LF  %11.4LE %7.2LF  %11.4LE %7.2LF",
+		  " %9.2f %7.2f %9.2f  %11.4E %7.2f  %11.4E %7.2f  %11.4E %7.2f",
 		  fpat.rfld, phi, thet, ethm, etha, ephm, epha, erdm, erda );
 
 	} /* for( kth = 1; kth <= fpat.nth; kth++ ) */
@@ -953,21 +930,21 @@ void rdpat( void )
   if( fpat.iavp != 0)
   {
 	tmp3= fpat.thets* TA;
-	tmp4= tmp3+ fpat.dth* TA* (long double)( fpat.nth-1);
-	tmp3= fabsl( fpat.dph* TA* (long double)( fpat.nph-1)*( cosl( tmp3)- cosl( tmp4)));
+	tmp4= tmp3+ fpat.dth* TA* (double)( fpat.nth-1);
+	tmp3= fabs( fpat.dph* TA* (double)( fpat.nph-1)*( cos( tmp3)- cos( tmp4)));
 	pint /= tmp3;
 	tmp3 /= PI;
 
 	fprintf( output_fp, "\n\n\n"
-		"  AVERAGE POWER GAIN: %11.4LE - SOLID ANGLE"
-		" USED IN AVERAGING: (%+7.4LF)*PI STERADIANS",
+		"  AVERAGE POWER GAIN: %11.4E - SOLID ANGLE"
+		" USED IN AVERAGING: (%+7.4f)*PI STERADIANS",
 		pint, tmp3 );
   }
 
   if( fpat.inor == 0)
 	return;
 
-  if( fabsl( fpat.gnor) > 1.0e-20)
+  if( fabs( fpat.gnor) > 1.0e-20)
 	gmax= fpat.gnor;
   itmp1=( fpat.inor-1);
 
@@ -976,7 +953,7 @@ void rdpat( void )
 	  " ---------- NORMALIZED GAIN ----------\n"
 	  "                                      %6s GAIN\n"
 	  "                                  "
-	  " NORMALIZATION FACTOR: %.2LF db\n\n"
+	  " NORMALIZATION FACTOR: %.2f db\n\n"
 	  "    ---- ANGLES ----                ---- ANGLES ----"
 	  "                ---- ANGLES ----\n"
 	  "    THETA      PHI        GAIN      THETA      PHI  "
@@ -999,14 +976,14 @@ void rdpat( void )
 	itmp3++;
 	itmp4++;
 	j= i/ fpat.nth;
-	tmp1= fpat.thets+ (long double)( i - j*fpat.nth )* fpat.dth;
-	tmp2= fpat.phis+ (long double)(j)* fpat.dph;
+	tmp1= fpat.thets+ (double)( i - j*fpat.nth )* fpat.dth;
+	tmp2= fpat.phis+ (double)(j)* fpat.dph;
 	j=( itmp3-1)/ fpat.nth;
-	tmp3= fpat.thets+ (long double)( itmp3- j* fpat.nth-1)* fpat.dth;
-	tmp4= fpat.phis+ (long double)(j)* fpat.dph;
+	tmp3= fpat.thets+ (double)( itmp3- j* fpat.nth-1)* fpat.dth;
+	tmp4= fpat.phis+ (double)(j)* fpat.dph;
 	j=( itmp4-1)/ fpat.nth;
-	tmp5= fpat.thets+ (long double)( itmp4- j* fpat.nth-1)* fpat.dth;
-	tmp6= fpat.phis+ (long double)(j)* fpat.dph;
+	tmp5= fpat.thets+ (double)( itmp4- j* fpat.nth-1)* fpat.dth;
+	tmp6= fpat.phis+ (double)(j)* fpat.dph;
 	tstor1= gain[i]- gmax;
 
 	if( ((i+1) == itmp1) && (itmp2 != 0) )
@@ -1015,14 +992,16 @@ void rdpat( void )
 	  {
 		tstor2= gain[itmp3-1]- gmax;
 		fprintf( output_fp, "\n"
-			" %9.2LF %9.2LF %9.2LF   %9.2LF %9.2LF %9.2LF   ",
+			" %9.2f %9.2f %9.2f   %9.2f %9.2f %9.2f   ",
 			tmp1, tmp2, tstor1, tmp3, tmp4, tstor2 );
+		free_ptr( (void *)&gain );
 		return;
 	  }
 
 	  fprintf( output_fp, "\n"
-		  " %9.2LF %9.2LF %9.2LF   ",
+		  " %9.2f %9.2f %9.2f   ",
 		  tmp1, tmp2, tstor1 );
+	  free_ptr( (void *)&gain );
 	  return;
 
 	} /* if( ((i+1) == itmp1) && (itmp2 != 0) ) */
@@ -1031,7 +1010,7 @@ void rdpat( void )
 	pint= gain[itmp4-1]- gmax;
 
 	fprintf( output_fp, "\n"
-		" %9.2LF %9.2LF %9.2LF   %9.2LF %9.2LF %9.2LF   %9.2LF %9.2LF %9.2LF",
+		" %9.2f %9.2f %9.2f   %9.2f %9.2f %9.2f   %9.2f %9.2f %9.2f",
 		tmp1, tmp2, tstor1, tmp3, tmp4, tstor2, tmp5, tmp6, pint );
 
   } /* for( i = 0; i < itmp1; i++ ) */

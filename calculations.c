@@ -24,47 +24,18 @@
  ******************************************************************/
 
 #include "nec2c.h"
-
-/* common  /tmi/ */
-extern tmi_t tmi;
-
-/*common  /ggrid/ */
-extern ggrid_t ggrid;
-
-/* common  /data/ */
-extern data_t data;
-
-/* common  /crnt/ */
-extern crnt_t crnt;
-
-/* common  /vsorc/ */
-extern vsorc_t vsorc;
-
-/* common  /segj/ */
-extern segj_t segj;
-
-/* common  /yparm/ */
-extern yparm_t yparm;
-
-/* common  /zload/ */
-extern zload_t zload;
-
-/* common  /smat/ */
-extern smat_t smat;
-
-/* pointers to input/output files */
-extern FILE *input_fp, *output_fp, *plot_fp;
+#include "shared.h"
 
 /*-----------------------------------------------------------------------*/
 
 /* cabc computes coefficients of the constant (a), sine (b), and */
 /* cosine (c) terms in the current interpolation functions for the */
 /* current vector cur. */
-void cabc( complex long double *curx)
+void cabc( complex double *curx)
 {
   int i, is, j, jx, jco1, jco2;
-  long double ar, ai, sh;
-  complex long double curd, cs1, cs2;
+  double ar, ai, sh;
+  complex double curd, cs1, cs2;
 
   if( data.n != 0)
   {
@@ -80,8 +51,8 @@ void cabc( complex long double *curx)
 
 	for( i = 0; i < data.n; i++ )
 	{
-	  ar= creall( curx[i]);
-	  ai= cimagl( curx[i]);
+	  ar= creal( curx[i]);
+	  ai= cimag( curx[i]);
 	  tbf( i+1, 1 );
 
 	  for( jx = 0; jx < segj.jsno; jx++ )
@@ -107,11 +78,11 @@ void cabc( complex long double *curx)
 		tbf(i+1,0);
 		data.icon1[i]= jx;
 		sh= data.si[i]*.5;
-		curd= CCJ* vsorc.vqds[is]/( (logl(2.* sh/ data.bi[i])-1.)*
-			(segj.bx[segj.jsno-1]* cosl(TP* sh)+ segj.cx[segj.jsno-1]*
-			 sinl(TP* sh))* data.wlam );
-		ar= creall( curd);
-		ai= cimagl( curd);
+		curd= CCJ* vsorc.vqds[is]/( (log(2.* sh/ data.bi[i])-1.)*
+			(segj.bx[segj.jsno-1]* cos(TP* sh)+ segj.cx[segj.jsno-1]*
+			 sin(TP* sh))* data.wlam );
+		ar= creal( curd);
+		ai= cimag( curd);
 
 		for( jx = 0; jx < segj.jsno; jx++ )
 		{
@@ -157,11 +128,11 @@ void cabc( complex long double *curx)
 /*-----------------------------------------------------------------------*/
 
 /* couple computes the maximum coupling between pairs of segments. */
-void couple( complex long double *cur, long double wlam )
+void couple( complex double *cur, double wlam )
 {
   int j, j1, j2, l1, i, k, itt1, itt2, its1, its2, isg1, isg2, npm1;
-  long double dbc, c, gmax;
-  complex long double y11, y12, y22, yl, yin, zl, zin, rho;
+  double dbc, c, gmax;
+  complex double y11, y12, y22, yl, yin, zl, zin, rho;
   size_t mreq;
 
   if( (vsorc.nsant != 1) || (vsorc.nvqd != 0) )
@@ -173,7 +144,8 @@ void couple( complex long double *cur, long double wlam )
 
   zin= vsorc.vsant[0];
   yparm.icoup++;
-  mreq = yparm.icoup * sizeof( complex long double);
+  mreq = (size_t)yparm.icoup;
+  mreq *= sizeof( complex double);
   mem_realloc( (void *)&yparm.y11a, mreq );
   yparm.y11a[yparm.icoup-1]= cur[j-1]*wlam/zin;
 
@@ -184,7 +156,8 @@ void couple( complex long double *cur, long double wlam )
 	  continue;
 
 	l1++;
-	mreq = l1 * sizeof( complex long double);
+	mreq = (size_t)l1;
+	mreq *= sizeof( complex double);
 	mem_realloc( (void *)&yparm.y12a, mreq );
 	k= isegno( yparm.nctag[i], yparm.ncseg[i]);
 	yparm.y12a[l1-1]= cur[k-1]* wlam/ zin;
@@ -223,28 +196,28 @@ void couple( complex long double *cur, long double wlam )
 	  y22= yparm.y11a[j];
 	  y12=.5*( yparm.y12a[j1]+ yparm.y12a[j2]);
 	  yin= y12* y12;
-	  dbc= cabsl( yin);
-	  c= dbc/(2.* creall( y11)* creall( y22)- creall( yin));
+	  dbc= cabs( yin);
+	  c= dbc/(2.* creal( y11)* creal( y22)- creal( yin));
 
 	  if( (c >= 0.0) && (c <= 1.0) )
 	  {
 		if( c >= .01 )
-		  gmax=(1.- sqrtl(1.- c*c))/c;
+		  gmax=(1.- sqrt(1.- c*c))/c;
 		else
 		  gmax=.5*( c+.25* c* c* c);
 
-		rho= gmax* conjl( yin)/ dbc;
-		yl=((1.- rho)/(1.+ rho)+1.)* creall( y22)- y22;
+		rho= gmax* conj( yin)/ dbc;
+		yl=((1.- rho)/(1.+ rho)+1.)* creal( y22)- y22;
 		zl=1./ yl;
 		yin= y11- yin/( y22+ yl);
 		zin=1./ yin;
 		dbc= db10( gmax);
 
 		fprintf( output_fp, "\n"
-			" %4d %4d %5d  %4d %4d %5d  %9.3LF"
-			"  %12.5LE %12.5LE  %12.5LE %12.5LE",
+			" %4d %4d %5d  %4d %4d %5d  %9.3f"
+			"  %12.5E %12.5E  %12.5E %12.5E",
 			itt1, its1, isg1, itt2, its2, isg2, dbc,
-			creall(zl), cimagl(zl), creall(zin), cimagl(zin) );
+			creal(zl), cimag(zl), creal(zin), cimag(zin) );
 
 		continue;
 
@@ -252,7 +225,7 @@ void couple( complex long double *cur, long double wlam )
 
 	  fprintf( output_fp, "\n"
 		  " %4d %4d %5d   %4d %4d %5d  **ERROR** "
-		  "COUPLING IS NOT BETWEEN 0 AND 1. (= %12.5LE)",
+		  "COUPLING IS NOT BETWEEN 0 AND 1. (= %12.5E)",
 		  itt1, its1, isg1, itt2, its2, isg2, c );
 
 	} /* for( j = l1; j < yparm.ncoup; j++ ) */
@@ -267,13 +240,13 @@ void couple( complex long double *cur, long double wlam )
 /* load calculates the impedance of specified */
 /* segments for various types of loading */
 void load( int *ldtyp, int *ldtag, int *ldtagf, int *ldtagt,
-	long double *zlr, long double *zli, long double *zlc )
+	double *zlr, double *zli, double *zlc )
 {
   int i, iwarn, istep, istepx, l1, l2, ldtags, jump, ichk;
-  complex long double zt=CPLX_00, tpcj;
+  complex double zt=CPLX_00, tpcj;
   size_t mreq;
 
-  tpcj = (0.0+1.883698955e+9fj);
+  tpcj = (0.0+I*1.883698955e+9);
   fprintf( output_fp, "\n"
 	  "  LOCATION        RESISTANCE  INDUCTANCE  CAPACITANCE   "
 	  "  IMPEDANCE (OHMS)   CONDUCTIVITY  CIRCUIT\n"
@@ -282,7 +255,8 @@ void load( int *ldtyp, int *ldtag, int *ldtagf, int *ldtagt,
 
   /* initialize d array, used for temporary */
   /* storage of loading information. */
-  mreq = data.npm * sizeof(complex long double);
+  mreq = (size_t)data.npm;
+  mreq *= sizeof(complex double);
   mem_realloc( (void *)&zload.zarray, mreq );
   for( i = 0; i < data.n; i++ )
 	zload.zarray[i]=CPLX_00;
@@ -374,30 +348,30 @@ void load( int *ldtyp, int *ldtag, int *ldtagf, int *ldtagt,
 	  {
 		case 1:
 		  zt= zlr[istepx]/ data.si[i]+ tpcj* zli[istepx]/( data.si[i]* data.wlam);
-		  if( fabsl( zlc[istepx]) > 1.0e-20)
+		  if( fabs( zlc[istepx]) > 1.0e-20)
 			zt += data.wlam/( tpcj* data.si[i]* zlc[istepx]);
 		  break;
 
 		case 2:
 		  zt= tpcj* data.si[i]* zlc[istepx]/ data.wlam;
-		  if( fabsl( zli[istepx]) > 1.0e-20)
+		  if( fabs( zli[istepx]) > 1.0e-20)
 			zt += data.si[i]* data.wlam/( tpcj* zli[istepx]);
-		  if( fabsl( zlr[istepx]) > 1.0e-20)
+		  if( fabs( zlr[istepx]) > 1.0e-20)
 			zt += data.si[i]/ zlr[istepx];
 		  zt=1./ zt;
 		  break;
 
 		case 3:
 		  zt= zlr[istepx]* data.wlam+ tpcj* zli[istepx];
-		  if( fabsl( zlc[istepx]) > 1.0e-20)
+		  if( fabs( zlc[istepx]) > 1.0e-20)
 			zt += 1./( tpcj* data.si[i]* data.si[i]* zlc[istepx]);
 		  break;
 
 		case 4:
 		  zt= tpcj* data.si[i]* data.si[i]* zlc[istepx];
-		  if( fabsl( zli[istepx]) > 1.0e-20)
+		  if( fabs( zli[istepx]) > 1.0e-20)
 			zt += 1./( tpcj* zli[istepx]);
-		  if( fabsl( zlr[istepx]) > 1.0e-20)
+		  if( fabs( zlr[istepx]) > 1.0e-20)
 			zt += 1./( zlr[istepx]* data.wlam);
 		  zt=1./ zt;
 		  break;
@@ -411,7 +385,7 @@ void load( int *ldtyp, int *ldtag, int *ldtagf, int *ldtagt,
 
 	  } /* switch( jump ) */
 
-	  if(( fabsl( creall( zload.zarray[i]))+ fabsl( cimagl( zload.zarray[i]))) > 1.0e-20)
+	  if(( fabs( creal( zload.zarray[i]))+ fabs( cimag( zload.zarray[i]))) > 1.0e-20)
 		iwarn=TRUE;
 	  zload.zarray[i] += zt;
 
@@ -461,29 +435,28 @@ void load( int *ldtyp, int *ldtag, int *ldtagf, int *ldtagt,
 
   } /* while( TRUE ) */
 
-  return;
 }
 
 /*-----------------------------------------------------------------------*/
 
 /* gf computes the integrand exp(jkr)/(kr) for numerical integration. */
-void gf( long double zk, long double *co, long double *si )
+void gf( double zk, double *co, double *si )
 {
-  long double zdk, rk, rks;
+  double zdk, rk, rks;
 
   zdk= zk- tmi.zpk;
-  rk= sqrtl( tmi.rkb2+ zdk* zdk);
-  *si= sinl( rk)/ rk;
+  rk= sqrt( tmi.rkb2+ zdk* zdk);
+  *si= sin( rk)/ rk;
 
   if( tmi.ij != 0 )
   {
-	*co= cosl( rk)/ rk;
+	*co= cos( rk)/ rk;
 	return;
   }
 
   if( rk >= .2)
   {
-	*co=( cosl( rk)-1.)/ rk;
+	*co=( cos( rk)-1.)/ rk;
 	return;
   }
 
@@ -496,41 +469,41 @@ void gf( long double zk, long double *co, long double *si )
 /*-----------------------------------------------------------------------*/
 
 /* function db10 returns db for magnitude (field) */
-long double db10( long double x )
+double db10( double x )
 {
   if( x < 1.e-20 )
 	return( -999.99 );
 
-  return( 10. * log10l(x) );
+  return( 10. * log10(x) );
 }
 
 /*-----------------------------------------------------------------------*/
 
 /* function db20 returns db for mag**2 (power) i */
-long double db20( long double x )
+double db20( double x )
 {
   if( x < 1.e-20 )
 	return( -999.99 );
 
-  return( 20. * log10l(x) );
+  return( 20. * log10(x) );
 }
 
 /*-----------------------------------------------------------------------*/
 
 /* intrp uses bivariate cubic interpolation to obtain */
 /* the values of 4 functions at the point (x,y). */
-void intrp( long double x, long double y, complex long double *f1,
-	complex long double *f2, complex long double *f3, complex long double *f4 )
+void intrp( double x, double y, complex double *f1,
+	complex double *f2, complex double *f3, complex double *f4 )
 {
   static int ix, iy, ixs=-10, iys=-10, igrs=-10, ixeg=0, iyeg=0;
   static int nxm2, nym2, nxms, nyms, nd, ndp;
   int nda[3]={11,17,9}, ndpa[3]={110,85,72};
   int jump;
-  static long double dx = 1., dy = 1., xs = 0., ys = 0., xz, yz;
-  long double xx, yy;
-  static complex long double a[4][4], b[4][4], c[4][4], d[4][4];
-  complex long double p1=CPLX_00, p2=CPLX_00, p3=CPLX_00, p4=CPLX_00;
-  complex long double fx1, fx2, fx3, fx4;
+  static double dx = 1., dy = 1., xs = 0., ys = 0., xz, yz;
+  double xx, yy;
+  static complex double a[4][4], b[4][4], c[4][4], d[4][4];
+  complex double p1=CPLX_00, p2=CPLX_00, p3=CPLX_00, p4=CPLX_00;
+  complex double fx1, fx2, fx3, fx4;
 
   jump = FALSE;
   if( (x < xs) || (y < ys) )
@@ -696,16 +669,16 @@ void intrp( long double x, long double y, complex long double *f1,
 /* intx performs numerical integration of exp(jkr)/r by the method of */
 /* variable interval width romberg integration.  the integrand value */
 /* is supplied by subroutine gf. */
-void intx( long double el1, long double el2, long double b,
-	int ij, long double *sgr, long double *sgi)
+void intx( double el1, double el2, double b,
+	int ij, double *sgr, double *sgi)
 {
   int ns, nt;
   int nx = 1, nma = 65536, nts = 4;
   int flag = TRUE;
-  long double z, s, ze, fnm, ep, zend, fns, dz=0., zp, dzot=0., t00r, g1r, g5r, t00i;
-  long double g1i, g5i, t01r, g3r, t01i, g3i, t10r, t10i, te1i, te1r, t02r;
-  long double g2r, g4r, t02i, g2i, g4i, t11r, t11i, t20r, t20i, te2i, te2r;
-  long double rx = 1.0e-4;
+  double z, s, ze, fnm, ep, zend, fns, dz=0., zp, dzot=0., t00r, g1r, g5r=0.0, t00i;
+  double g1i, g5i=0.0, t01r, g3r=0.0, t01i, g3i=0.0, t10r, t10i, te1i, te1r, t02r;
+  double g2r, g4r, t02i, g2i, g4i, t11r, t11i, t20r, t20i, te2i, te2r;
+  double rx = 1.0e-4;
 
   z= el1;
   ze= el2;
@@ -732,12 +705,12 @@ void intx( long double el1, long double el2, long double b,
 	  if( zp > ze)
 	  {
 		dz= ze- z;
-		if( fabsl(dz) <= ep)
+		if( fabs(dz) <= ep)
 		{
 		  /* add contribution of near singularity for diagonal term */
 		  if(ij == 0)
 		  {
-			*sgr=2.*( *sgr+ logl(( sqrtl( b* b+ s* s)+ s)/ b));
+			*sgr=2.*( *sgr+ log(( sqrt( b* b+ s* s)+ s)/ b));
 			*sgi=2.* *sgi;
 		  }
 		  return;
@@ -774,7 +747,7 @@ void intx( long double el1, long double el2, long double b,
 		/* add contribution of near singularity for diagonal term */
 		if(ij == 0)
 		{
-		  *sgr=2.*( *sgr+ logl(( sqrtl( b* b+ s* s)+ s)/ b));
+		  *sgr=2.*( *sgr+ log(( sqrt( b* b+ s* s)+ s)/ b));
 		  *sgi=2.* *sgi;
 		}
 		return;
@@ -811,7 +784,7 @@ void intx( long double el1, long double el2, long double b,
 	{
 	  nt=0;
 	  if( ns >= nma)
-		fprintf( output_fp, "\n  STEP SIZE LIMITED AT Z= %10.5LF", z );
+		fprintf( output_fp, "\n  STEP SIZE LIMITED AT Z= %10.5f", z );
 	  else
 	  {
 		/* halve step size */
@@ -840,7 +813,7 @@ void intx( long double el1, long double el2, long double b,
 	  /* add contribution of near singularity for diagonal term */
 	  if(ij == 0)
 	  {
-		*sgr=2.*( *sgr+ logl(( sqrtl( b* b+ s* s)+ s)/ b));
+		*sgr=2.*( *sgr+ log(( sqrt( b* b+ s* s)+ s)/ b));
 		*sgi=2.* *sgi;
 	  }
 	  return;
@@ -875,13 +848,13 @@ int min( int a, int b )
 /*-----------------------------------------------------------------------*/
 
 /* test for convergence in numerical integration */
-void test( long double f1r, long double f2r, long double *tr,
-	long double f1i, long double f2i, long double *ti, long double dmin )
+void test( double f1r, double f2r, double *tr,
+	double f1i, double f2i, double *ti, double dmin )
 {
-  long double den;
+  double den;
 
-  den= fabsl( f2r);
-  *tr= fabsl( f2i);
+  den= fabs( f2r);
+  *tr= fabs( f2i);
 
   if( den < *tr)
 	den= *tr;
@@ -895,8 +868,8 @@ void test( long double f1r, long double f2r, long double *tr,
 	return;
   }
 
-  *tr= fabsl(( f1r- f2r)/ den);
-  *ti= fabsl(( f1i- f2i)/ den);
+  *tr= fabs(( f1r- f2r)/ den);
+  *ti= fabs(( f1i- f2i)/ den);
 
   return;
 }
@@ -904,10 +877,10 @@ void test( long double f1r, long double f2r, long double *tr,
 /*-----------------------------------------------------------------------*/
 
 /* compute component of basis function i on segment is. */
-void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
+void sbf( int i, int is, double *aa, double *bb, double *cc )
 {
   int ix, jsno, june, jcox, jcoxx, jend, iend, njun1=0, njun2;
-  long double d, sig, pp, sdh, cdh, sd, omc, aj, pm=0, cd, ap, qp, qm, xxi;
+  double d, sig, pp, sdh, cdh, sd, omc, aj, pm=0, cd, ap, qp, qm, xxi;
 
   *aa=0.;
   *bb=0.;
@@ -939,8 +912,8 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 
 	  jsno++;
 	  d= PI* data.si[jcoxx];
-	  sdh= sinl( d);
-	  cdh= cosl( d);
+	  sdh= sin( d);
+	  cdh= cos( d);
 	  sd=2.* sdh* cdh;
 
 	  if( d <= 0.015)
@@ -951,7 +924,7 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 	  else
 		omc=1.- cdh* cdh+ sdh* sdh;
 
-	  aj=1./( logl(1./( PI* data.bi[jcoxx]))-.577215664);
+	  aj=1./( log(1./( PI* data.bi[jcoxx]))-.577215664);
 	  pp -= omc/ sd* aj;
 
 	  if( jcox == is)
@@ -1007,8 +980,8 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 
   njun2= jsno- njun1;
   d= PI* data.si[ix];
-  sdh= sinl( d);
-  cdh= cosl( d);
+  sdh= sin( d);
+  cdh= cos( d);
   sd=2.* sdh* cdh;
   cd= cdh* cdh- sdh* sdh;
 
@@ -1020,7 +993,7 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
   else
 	omc=1.- cd;
 
-  ap=1./( logl(1./( PI* data.bi[ix])) -.577215664);
+  ap=1./( log(1./( PI* data.bi[ix])) -.577215664);
   aj= ap;
 
   if( njun1 == 0)
@@ -1118,8 +1091,8 @@ void sbf( int i, int is, long double *aa, long double *bb, long double *cc )
 void tbf( int i, int icap )
 {
   int ix, jcox, jcoxx, jend, iend, njun1=0, njun2, jsnop, jsnox;
-  long double pp, sdh, cdh, sd, omc, aj, pm=0, cd, ap, qp, qm, xxi;
-  long double d, sig; /*** also global ***/
+  double pp, sdh, cdh, sd, omc, aj, pm=0, cd, ap, qp, qm, xxi;
+  double d, sig; /*** also global ***/
 
   segj.jsno=0;
   pp=0.;
@@ -1149,8 +1122,8 @@ void tbf( int i, int icap )
 	  jsnox = segj.jsno-1;
 	  segj.jco[jsnox]= jcox;
 	  d= PI* data.si[jcoxx];
-	  sdh= sinl( d);
-	  cdh= cosl( d);
+	  sdh= sin( d);
+	  cdh= cos( d);
 	  sd=2.* sdh* cdh;
 
 	  if( d <= 0.015)
@@ -1161,7 +1134,7 @@ void tbf( int i, int icap )
 	  else
 		omc=1.- cdh* cdh+ sdh* sdh;
 
-	  aj=1./( logl(1./( PI* data.bi[jcoxx]))-.577215664);
+	  aj=1./( log(1./( PI* data.bi[jcoxx]))-.577215664);
 	  pp= pp- omc/ sd* aj;
 	  segj.ax[jsnox]= aj/ sd* sig;
 	  segj.bx[jsnox]= aj/(2.* cdh);
@@ -1213,8 +1186,8 @@ void tbf( int i, int icap )
   jsnop= segj.jsno;
   segj.jco[jsnop]= i;
   d= PI* data.si[ix];
-  sdh= sinl( d);
-  cdh= cosl( d);
+  sdh= sin( d);
+  cdh= cos( d);
   sd=2.* sdh* cdh;
   cd= cdh* cdh- sdh* sdh;
 
@@ -1226,7 +1199,7 @@ void tbf( int i, int icap )
   else
 	omc=1.- cd;
 
-  ap=1./( logl(1./( PI* data.bi[ix]))-.577215664);
+  ap=1./( log(1./( PI* data.bi[ix]))-.577215664);
   aj= ap;
 
   if( njun1 == 0)
@@ -1368,9 +1341,11 @@ void trio( int j )
 	  if( segj.jsno >= segj.maxcon )
 	  {
 		segj.maxcon = segj.jsno +1;
-		size_t mreq = segj.maxcon * sizeof(int);
+		size_t mreq = (size_t)segj.maxcon;
+		mreq *= sizeof(int);
 		mem_realloc( (void *)&segj.jco, mreq );
-		mreq = segj.maxcon * sizeof(long double);
+		mreq = (size_t)segj.maxcon;
+		mreq *= sizeof(double);
 		mem_realloc( (void *) &segj.ax, mreq );
 		mem_realloc( (void *) &segj.bx, mreq );
 		mem_realloc( (void *) &segj.cx, mreq );
@@ -1400,9 +1375,11 @@ void trio( int j )
 	  if( segj.jsno >= segj.maxcon )
 	  {
 		segj.maxcon = segj.jsno +1;
-		size_t mreq = segj.maxcon * sizeof(int);
+		size_t mreq = (size_t)segj.maxcon;
+		mreq *= sizeof(int);
 		mem_realloc( (void *)&segj.jco, mreq );
-		mreq = segj.maxcon * sizeof(long double);
+		mreq = (size_t)segj.maxcon;
+		mreq *= sizeof(double);
 		mem_realloc( (void *) &segj.ax, mreq );
 		mem_realloc( (void *) &segj.bx, mreq );
 		mem_realloc( (void *) &segj.cx, mreq );
@@ -1447,9 +1424,11 @@ void trio( int j )
   if( segj.jsno >= segj.maxcon )
   {
 	segj.maxcon = segj.jsno +1;
-	size_t mreq = segj.maxcon * sizeof(int);
+	size_t mreq = (size_t)segj.maxcon;
+	mreq *= sizeof(int);
 	mem_realloc( (void *)&segj.jco, mreq );
-	mreq = segj.maxcon * sizeof(long double);
+	mreq = (size_t)segj.maxcon;
+	mreq *= sizeof(double);
 	mem_realloc( (void *) &segj.ax, mreq );
 	mem_realloc( (void *) &segj.bx, mreq );
 	mem_realloc( (void *) &segj.cx, mreq );
@@ -1465,38 +1444,38 @@ void trio( int j )
 /*-----------------------------------------------------------------------*/
 
 /* zint computes the internal impedance of a circular wire */
-void zint( long double sigl, long double rolam, complex long double *zint )
+void zint( double sigl, double rolam, complex double *zint )
 {
-#define cc1	( 6.0e-7     + 1.9e-6fj)
-#define cc2	(-3.4e-6     + 5.1e-6fj)
-#define cc3	(-2.52e-5    + 0.fj)
-#define cc4	(-9.06e-5    - 9.01e-5fj)
-#define cc5	( 0.         - 9.765e-4fj)
-#define cc6	(.0110486    - .0110485fj)
-#define cc7	( 0.         - .3926991fj)
-#define cc8	( 1.6e-6     - 3.2e-6fj)
-#define cc9	( 1.17e-5    - 2.4e-6fj)
-#define cc10	( 3.46e-5    + 3.38e-5fj)
-#define cc11	( 5.0e-7     + 2.452e-4fj)
-#define cc12	(-1.3813e-3  + 1.3811e-3fj)
-#define cc13	(-6.25001e-2 - 1.0e-7fj)
-#define cc14	(.7071068    + .7071068fj)
+#define cc1		( 6.0e-7     + I*1.9e-6)
+#define cc2		(-3.4e-6     + I*5.1e-6)
+#define cc3		(-2.52e-5    + I*0.0)
+#define cc4		(-9.06e-5    - I*9.01e-5)
+#define cc5		( 0.         - I*9.765e4)
+#define cc6		(.0110486    - I*0.0110485)
+#define cc7		( 0.         - I*0.3926991)
+#define cc8		( 1.6e-6     - I*3.2e-6)
+#define cc9		( 1.17e-5    - I*2.4e-6)
+#define cc10	( 3.46e-5    + I*3.38e-5)
+#define cc11	( 5.0e-7     + I*2.452e-4)
+#define cc12	(-1.3813e-3  + I*1.3811e-3)
+#define cc13	(-6.25001e-2 - I*1.0e-7)
+#define cc14	(.7071068    + I*0.7071068)
 #define cn	cc14
 
 #define th(d) ( (((((cc1*(d)+cc2)*(d)+cc3)*(d)+cc4)*(d)+cc5)*(d)+cc6)*(d) + cc7 )
 #define ph(d) ( (((((cc8*(d)+cc9)*(d)+cc10)*(d)+cc11)*(d)+cc12)*(d)+cc13)*(d)+cc14 )
-#define f(d)  ( csqrtl(POT/(d))*cexpl(-cn*(d)+th(-8./x)) )
-#define g(d)  ( cexpl(cn*(d)+th(8./x))/csqrtl(TP*(d)) )
+#define f(d)  ( csqrt(POT/(d))*cexp(-cn*(d)+th(-8./x)) )
+#define g(d)  ( cexp(cn*(d)+th(8./x))/csqrt(TP*(d)) )
 
-  long double x, tpcmu = 2.368705e+3, cmotp = 60.00;
-  complex long double br1, br2;
+  double x, tpcmu = 2.368705e+3, cmotp = 60.00;
+  complex double br1, br2;
 
-  x= sqrtl( tpcmu* sigl)* rolam;
+  x= sqrt( tpcmu* sigl)* rolam;
   if( x <= 110.)
   {
 	if( x <= 8.)
 	{
-	  long double y, s, ber, bei;
+	  double y, s, ber, bei;
 	  y= x/8.;
 	  y= y* y;
 	  s= y* y;
@@ -1517,28 +1496,28 @@ void zint( long double sigl, long double rolam, complex long double *zint )
 
 	  br2= cmplx( ber, bei);
 	  br1= br1/ br2;
-	  *zint= CPLX_01* sqrtl( cmotp/sigl )* br1/ rolam;
+	  *zint= CPLX_01* sqrt( cmotp/sigl )* br1/ rolam;
 
   } /* if( x <= 8.) */
 
-	br2= CPLX_01* f(x)/ PI;
+	br2= I*f(x)/ PI;
 	br1= g( x)+ br2;
 	br2= g( x)* ph(8./ x)- br2* ph(-8./ x);
 	br1= br1/ br2;
-	*zint= CPLX_01* sqrtl( cmotp/ sigl)* br1/ rolam;
+	*zint= CPLX_01* sqrt( cmotp/ sigl)* br1/ rolam;
 
   } /* if( x <= 110.) */
 
   br1= cmplx(.70710678,-.70710678);
-  *zint= CPLX_01* sqrtl( cmotp/ sigl)* br1/ rolam;
+  *zint= CPLX_01* sqrt( cmotp/ sigl)* br1/ rolam;
 }
 
 /*-----------------------------------------------------------------------*/
 
 /* cang returns the phase angle of a complex number in degrees. */
-long double cang( complex long double z )
+double cang( complex double z )
 {
-  return( cargl(z)*TD );
+  return( carg(z)*TD );
 }
 
 /*-----------------------------------------------------------------------*/
