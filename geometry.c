@@ -132,7 +132,7 @@ void conect( int ignd )
 	  data.mp= data.m;
 	}
 
-	/*** possibly should be error condition?? **/
+	/** possibly should be error condition?? **/
 	if( data.np > data.n)
 	{
 	  fprintf( output_fp,
@@ -188,7 +188,7 @@ void conect( int ignd )
 
 	  } /* if( ignd > 0) */
 
-	  if( ! jump )
+	  if( !jump )
 	  {
 		ic= i;
 		for( j = 1; j < data.n; j++)
@@ -379,19 +379,19 @@ void conect( int ignd )
 	ya= data.y1[j];
 	za= data.z1[j];
 
+	/* if( ix == 0 ) Not needed??
+	{
+	  fprintf( output_fp,
+		  "\n  CONNECT - SEGMENT CONNECTION ERROR FOR SEGMENT: %d", ix );
+	  stop(-1);
+	} */
+
 	while( TRUE )
 	{
 	  if( (ix != 0) && (ix != (j+1)) && (ix <= PCHCON) )
 	  {
 		do
 		{
-		  if( ix == 0 )
-		  {
-			fprintf( output_fp,
-				"\n  CONNECT - SEGMENT CONNECTION ERROR FOR SEGMENT: %d", ix );
-			stop(-1);
-		  }
-
 		  if( ix < 0 )
 			ix= -ix;
 		  else

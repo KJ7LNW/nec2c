@@ -496,8 +496,8 @@ void gshank( complex double start, complex double dela,
 
   for( i = 0; i < nans; i++ )
 	ans2[i]=seed[i];
-
   b=start;
+
   for( intx = 1; intx <= MAXH; intx++ )
   {
 	inx=intx-1;
@@ -511,19 +511,10 @@ void gshank( complex double start, complex double dela,
 	  b=bk;
 	  del=delb;
 	  rom1(nans,sum,2);
-	  if( ibx != 2 )
-	  {
-		for( i = 0; i < nans; i++ )
-		  ans2[i] += sum[i];
-		intx = 0;
-		continue;
-	  }
-
 	  for( i = 0; i < nans; i++ )
-		ans2[i]=ans1[i]+sum[i];
+		ans2[i] += sum[i];
 	  intx = 0;
 	  continue;
-
 	} /* if( (ibx == 0) && (creal(b) >= rbk) ) */
 
 	rom1(nans,sum,2);
@@ -531,7 +522,6 @@ void gshank( complex double start, complex double dela,
 	  ans1[i] = ans2[i]+sum[i];
 	a=b;
 	b += del;
-
 	if( (ibx == 0) && (creal(b) >= rbk) )
 	{
 	  /* hit break point.  reset seed and start over. */
@@ -539,19 +529,10 @@ void gshank( complex double start, complex double dela,
 	  b=bk;
 	  del=delb;
 	  rom1(nans,sum,2);
-	  if( ibx != 2 )
-	  {
-		for( i = 0; i < nans; i++ )
-		  ans2[i] += sum[i];
-		intx = 0;
-		continue;
-	  }
-
 	  for( i = 0; i < nans; i++ )
 		ans2[i] = ans1[i]+sum[i];
 	  intx = 0;
 	  continue;
-
 	} /* if( (ibx == 0) && (creal(b) >= rbk) ) */
 
 	rom1(nans,sum,2);
@@ -590,7 +571,6 @@ void gshank( complex double start, complex double dela,
 		  q2[i][jm]=as2;
 		  as1=a1;
 		  as2=a2;
-
 		} /* for( j = 1; i < intx; i++ ) */
 
 	  } /* if(intx >= 2) */
@@ -821,8 +801,8 @@ void rom1( int n, complex double *sum, int nx )
 	{
 	  for( i = 0; i < n; i++ )
 		sum[i] += t10[i];
-
 	  nt += 2;
+
 	  z += dz;
 	  if(z > zend)
 		return;
@@ -914,12 +894,6 @@ void rom1( int n, complex double *sum, int nx )
 
 	for( i = 0; i < n; i++ )
 	  g1[i]=g5[i];
-
-	if( (nt >= NTS) && (ns > nx) )
-	{
-	  ns /= 2;
-	  nt=1;
-	}
 
 	jump = FALSE;
 

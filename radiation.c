@@ -941,79 +941,79 @@ void rdpat( void )
 		pint, tmp3 );
   }
 
-  if( fpat.inor == 0)
-	return;
-
-  if( fabs( fpat.gnor) > 1.0e-20)
-	gmax= fpat.gnor;
-  itmp1=( fpat.inor-1);
-
-  fprintf( output_fp,	"\n\n\n"
-	  "                             "
-	  " ---------- NORMALIZED GAIN ----------\n"
-	  "                                      %6s GAIN\n"
-	  "                                  "
-	  " NORMALIZATION FACTOR: %.2f db\n\n"
-	  "    ---- ANGLES ----                ---- ANGLES ----"
-	  "                ---- ANGLES ----\n"
-	  "    THETA      PHI        GAIN      THETA      PHI  "
-	  "      GAIN      THETA      PHI       GAIN\n"
-	  "   DEGREES   DEGREES        DB     DEGREES   DEGREES "
-	  "       DB     DEGREES   DEGREES       DB",
-	  igntp[itmp1], gmax );
-
-  itmp2= fpat.nph* fpat.nth;
-  itmp1=( itmp2+2)/3;
-  itmp2= itmp1*3- itmp2;
-  itmp3= itmp1;
-  itmp4=2* itmp1;
-
-  if( itmp2 == 2)
-	itmp4--;
-
-  for( i = 0; i < itmp1; i++ )
+  if( fpat.inor > 0)
   {
-	itmp3++;
-	itmp4++;
-	j= i/ fpat.nth;
-	tmp1= fpat.thets+ (double)( i - j*fpat.nth )* fpat.dth;
-	tmp2= fpat.phis+ (double)(j)* fpat.dph;
-	j=( itmp3-1)/ fpat.nth;
-	tmp3= fpat.thets+ (double)( itmp3- j* fpat.nth-1)* fpat.dth;
-	tmp4= fpat.phis+ (double)(j)* fpat.dph;
-	j=( itmp4-1)/ fpat.nth;
-	tmp5= fpat.thets+ (double)( itmp4- j* fpat.nth-1)* fpat.dth;
-	tmp6= fpat.phis+ (double)(j)* fpat.dph;
-	tstor1= gain[i]- gmax;
+	if( fabs( fpat.gnor) > 1.0e-20)
+	  gmax= fpat.gnor;
+	itmp1=( fpat.inor-1);
 
-	if( ((i+1) == itmp1) && (itmp2 != 0) )
+	fprintf( output_fp,	"\n\n\n"
+		"                             "
+		" ---------- NORMALIZED GAIN ----------\n"
+		"                                      %6s GAIN\n"
+		"                                  "
+		" NORMALIZATION FACTOR: %.2f db\n\n"
+		"    ---- ANGLES ----                ---- ANGLES ----"
+		"                ---- ANGLES ----\n"
+		"    THETA      PHI        GAIN      THETA      PHI  "
+		"      GAIN      THETA      PHI       GAIN\n"
+		"   DEGREES   DEGREES        DB     DEGREES   DEGREES "
+		"       DB     DEGREES   DEGREES       DB",
+		igntp[itmp1], gmax );
+
+	itmp2= fpat.nph* fpat.nth;
+	itmp1=( itmp2+2)/3;
+	itmp2= itmp1*3- itmp2;
+	itmp3= itmp1;
+	itmp4=2* itmp1;
+
+	if( itmp2 == 2)
+	  itmp4--;
+
+	for( i = 0; i < itmp1; i++ )
 	{
-	  if( itmp2 != 2)
+	  itmp3++;
+	  itmp4++;
+	  j= i/ fpat.nth;
+	  tmp1= fpat.thets+ (double)( i - j*fpat.nth )* fpat.dth;
+	  tmp2= fpat.phis+ (double)(j)* fpat.dph;
+	  j=( itmp3-1)/ fpat.nth;
+	  tmp3= fpat.thets+ (double)( itmp3- j* fpat.nth-1)* fpat.dth;
+	  tmp4= fpat.phis+ (double)(j)* fpat.dph;
+	  j=( itmp4-1)/ fpat.nth;
+	  tmp5= fpat.thets+ (double)( itmp4- j* fpat.nth-1)* fpat.dth;
+	  tmp6= fpat.phis+ (double)(j)* fpat.dph;
+	  tstor1= gain[i]- gmax;
+
+	  if( ((i+1) == itmp1) && (itmp2 != 0) )
 	  {
-		tstor2= gain[itmp3-1]- gmax;
+		if( itmp2 != 2)
+		{
+		  tstor2= gain[itmp3-1]- gmax;
+		  fprintf( output_fp, "\n"
+			  " %9.2f %9.2f %9.2f   %9.2f %9.2f %9.2f   ",
+			  tmp1, tmp2, tstor1, tmp3, tmp4, tstor2 );
+		  free_ptr( (void *)&gain );
+		  return;
+		}
+
 		fprintf( output_fp, "\n"
-			" %9.2f %9.2f %9.2f   %9.2f %9.2f %9.2f   ",
-			tmp1, tmp2, tstor1, tmp3, tmp4, tstor2 );
+			" %9.2f %9.2f %9.2f   ",
+			tmp1, tmp2, tstor1 );
 		free_ptr( (void *)&gain );
 		return;
-	  }
+
+	  } /* if( ((i+1) == itmp1) && (itmp2 != 0) ) */
+
+	  tstor2= gain[itmp3-1]- gmax;
+	  pint= gain[itmp4-1]- gmax;
 
 	  fprintf( output_fp, "\n"
-		  " %9.2f %9.2f %9.2f   ",
-		  tmp1, tmp2, tstor1 );
-	  free_ptr( (void *)&gain );
-	  return;
+		  " %9.2f %9.2f %9.2f   %9.2f %9.2f %9.2f   %9.2f %9.2f %9.2f",
+		  tmp1, tmp2, tstor1, tmp3, tmp4, tstor2, tmp5, tmp6, pint );
 
-	} /* if( ((i+1) == itmp1) && (itmp2 != 0) ) */
-
-	tstor2= gain[itmp3-1]- gmax;
-	pint= gain[itmp4-1]- gmax;
-
-	fprintf( output_fp, "\n"
-		" %9.2f %9.2f %9.2f   %9.2f %9.2f %9.2f   %9.2f %9.2f %9.2f",
-		tmp1, tmp2, tstor1, tmp3, tmp4, tstor2, tmp5, tmp6, pint );
-
-  } /* for( i = 0; i < itmp1; i++ ) */
+	} /* for( i = 0; i < itmp1; i++ ) */
+  }
 
   free_ptr( (void *)&gain );
 
