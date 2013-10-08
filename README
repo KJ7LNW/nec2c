@@ -196,6 +196,12 @@
   of the NEC2 Fortran source, is extremely difficult to read so I am
   not able to confirm the impact of those reported defects.
 
+  Version 1.3: Revised the fix of one issue reported by Coverity Scan,
+  as on more detailed comparison with the original Fortran code, it
+  seems the original changes (in the ROM1 function in SOMNEC) were
+  not correct. Unfortunately I cannot verify the correctness of the
+  above fixes, as nec2c does not print out SOMNEC output files.
+
   7. License:
   nec2c is Public Domain, same as the original FORTRAN source.
   Please keep any software you write incorporating nec2c in Public
