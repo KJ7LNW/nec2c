@@ -38,7 +38,7 @@ static void sig_handler( int signal );
 int main( int argc, char **argv )
 {
   char infile[81] = "", otfile[81] = "";
-  char ain[3], line_buf[81];
+  char ain[3], line_buf[LINE_LEN];
 
 /* input card mnemonic list */
 #define NUM_CMNDS  20
