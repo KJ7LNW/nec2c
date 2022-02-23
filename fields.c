@@ -1300,14 +1300,14 @@ void nefld( double xob, double yob, double zob,
 /*-----------------------------------------------------------------------*/
 
 /* compute near e or h fields over a range of points */
-void nfpat( void )
+void nfpat( int nfeh )
 {
   int i, j, kk;
   double znrt, cth=0., sth=0., ynrt, cph=0., sph=0., xnrt, xob, yob;
   double zob, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, xxx;
   complex double ex, ey, ez;
 
-  if( fpat.nfeh != 1)
+  if( nfeh != 1)
   {
 	fprintf( output_fp,	"\n\n\n"
 		"                             "
@@ -1367,7 +1367,7 @@ void nfpat( void )
 		tmp2= yob/ data.wlam;
 		tmp3= zob/ data.wlam;
 
-		if( fpat.nfeh != 1)
+		if( nfeh != 1)
 		  nefld( tmp1, tmp2, tmp3, &ex, &ey, &ez);
 		else
 		  nhfld( tmp1, tmp2, tmp3, &ex, &ey, &ez);

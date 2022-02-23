@@ -80,6 +80,10 @@
 /* max length of a line read from input file */
 #define	LINE_LEN	132
 
+#define NEAR_EFIELD     0x01
+#define NEAR_HFIELD     0x02
+#define NEAR_EHFIELD    0x03
+
 /*** Structs encapsulating global ("common") variables ***/
 /* common  /crnt/ */
 typedef struct
@@ -478,7 +482,7 @@ void hintg(double xi, double yi, double zi);
 void hsfld(double xi, double yi, double zi, double ai);
 void hsflx(double s, double rh, double zpx, complex double *hpk, complex double *hps, complex double *hpc);
 void nefld(double xob, double yob, double zob, complex double *ex, complex double *ey, complex double *ez);
-void nfpat(void);
+void nfpat(int nfeh);
 void nhfld(double xob, double yob, double zob, complex double *hx, complex double *hy, complex double *hz);
 void pcint(double xi, double yi, double zi, double cabi, double sabi, double salpi, complex double *e);
 void unere(double xob, double yob, double zob);
