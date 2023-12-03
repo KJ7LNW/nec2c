@@ -445,6 +445,7 @@ void fbar( complex double p, complex double *fbar )
 
 	*fbar=1.-(1.- sum* TOSP)* z* cexp( zs)* SP;
 
+    return;
   } /* if( cabs( z) <= 3.) */
 
   /* asymptotic expansion */
