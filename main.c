@@ -44,26 +44,10 @@ int main( int argc, char **argv )
 #define NUM_CMNDS  20
   char *atst[NUM_CMNDS] =
   {
-	"FR", // 1
-	"LD", // 2
-	"GN", // 3
-	"EX", // 4
-	"NT", // 5
-	"TL", // 6
-	"XQ", // 7
-	"GD", // 8
-	"RP", // 9
-	"NX", // 10
-	"PT", // 11
-	"KH", // 12
-	"NE", // 13
-	"NH", // 14
-	"PQ", // 15
-	"EK", // 16
-	"CP", // 17
-	"PL", // 18
-	"EN", // 19
-	"WG" // 20
+	"FR", "LD", "GN", "EX", "NT", "TL", \
+	  "XQ", "GD", "RP", "NX", "PT", "KH", \
+	  "NE", "NH", "PQ", "EK", "CP", "PL", \
+	  "EN", "WG"
   };
 
   char *hpol[3] = { "LINEAR", "RIGHT", "LEFT" };
@@ -811,9 +795,9 @@ int main( int argc, char **argv )
 		case 12: case 13:  /* "ne"/"nh" cards, near field calculation parameters */
 
 		  if( ain_num == 13 )
-			fpat.nfeh |= NEAR_HFIELD;
+			fpat.nfeh=1;
 		  else
-			fpat.nfeh |= NEAR_EFIELD;
+			fpat.nfeh=0;
 
 		  if( (iflow == 8) && (nfrq != 1) )
 		  {
@@ -1670,11 +1654,7 @@ int main( int argc, char **argv )
 
 			  if( fpat.near != -1)
 			  {
-				if (fpat.nfeh & NEAR_EFIELD)
-				  nfpat(0);
-
-				if (fpat.nfeh & NEAR_HFIELD)
-				  nfpat(1);
+				nfpat();
 
 				if( mhz == nfrq)
 				  fpat.near=-1;
