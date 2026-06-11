@@ -859,7 +859,7 @@ void rdpat( void )
 			thet, phi, tmp5, tmp6, gtot, axrat,
 			tilta, isens, ethm, etha, ephm, epha );
 
-		if( plot.iplp1 != 3)
+		if( (plot.iplp1 != 3) || (plot_fp == NULL) )
 		  continue;
 
 		if( plot.iplp3 != 0)

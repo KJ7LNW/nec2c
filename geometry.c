@@ -783,7 +783,9 @@ void datagn( void )
 				i+1, data.x[i], data.y[i], data.z[i], data.si[i], xw2, yw2,
 				data.bi[i], data.icon1[i], i+1, data.icon2[i], data.itag[i] );
 
-			if( plot.iplp1 == 1)
+			/* plot_fp is opened by -p or lazily by the PL card; the GE card
+			 * can set iplp1 during geometry input, so guard on an open stream. */
+			if( (plot.iplp1 == 1) && (plot_fp != NULL) )
 			  fprintf( plot_fp, "%12.4E %12.4E %12.4E "
 				  "%12.4E %12.4E %12.4E %12.4E %5d %5d %5d\n",
 				  data.x[i],data.y[i],data.z[i],data.si[i],xw2,yw2,

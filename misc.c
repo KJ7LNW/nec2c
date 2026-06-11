@@ -15,6 +15,7 @@ void usage(void)
 {
   fprintf( stderr,
 	  "usage: nec2c [-i<input-file-name>] [-o<output-file-name>]"
+	  "\n       [-p<plot-file-name>]"
 	  "\n       -h: print this usage information and exit."
 	  "\n       -v: print nec2c version number and exit.\n");
 

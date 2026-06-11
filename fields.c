@@ -1383,7 +1383,7 @@ void nfpat( void )
 			" %9.4f %9.4f %9.4f  %11.4E %7.2f  %11.4E %7.2f  %11.4E %7.2f",
 			xob, yob, zob, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6 );
 
-		if( plot.iplp1 != 2)
+		if( (plot.iplp1 != 2) || (plot_fp == NULL) )
 		  continue;
 
 		if( plot.iplp4 < 0 )

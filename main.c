@@ -33,6 +33,23 @@
 /* signal handler */
 static void sig_handler( int signal );
 
+/* open_plot_file opens the plot data file once. A repeat request keeps the
+ * first stream so the -p option and a deck's PL card resolve to one file. */
+static void open_plot_file( char *fname )
+{
+  if( plot_fp != NULL )
+	return;
+
+  if( (plot_fp = fopen( fname, "w" )) == NULL )
+  {
+	char mesg[88] = "nec2c: ";
+
+	strncat( mesg, fname, sizeof(mesg) - strlen(mesg) - 1 );
+	perror( mesg );
+	exit( -1 );
+  }
+}
+
 /*-------------------------------------------------------------------*/
 
 int main( int argc, char **argv )
@@ -104,7 +121,7 @@ int main( int argc, char **argv )
   }
 
   /* process command line options */
-  while( (option = getopt(argc, argv, "i:o:hv") ) != -1 )
+  while( (option = getopt(argc, argv, "i:o:p:hv") ) != -1 )
   {
 	switch( option )
 	{
@@ -118,6 +135,10 @@ int main( int argc, char **argv )
 		if( strlen(optarg) > 75 )
 		  abort_on_error(-2);
 		strcpy( otfile, optarg );
+		break;
+
+	  case 'p' : /* specify plot (validation) data file name */
+		open_plot_file( optarg );
 		break;
 
 	  case 'h' : /* print usage and exit */
@@ -894,23 +915,13 @@ int main( int argc, char **argv )
 		  plot.iplp3= itmp3;
 		  plot.iplp4= itmp4;
 
-		  if( plot_fp == NULL )
 		  {
 			char plotfile[81];
 
-			/* Make a plot file name */
+			/* Make a plot file name from the input file. */
 			strcpy( plotfile, infile );
 			strcat( plotfile, ".plt" );
-
-			/* Open plot file */
-			if( (plot_fp = fopen(plotfile, "w")) == NULL )
-			{
-			  char mesg[88] = "nec2c: ";
-
-			  strcat( mesg, plotfile );
-			  perror( mesg );
-			  exit(-1);
-			}
+			open_plot_file( plotfile );
 		  }
 
 		  continue; /* continue card input loop */
@@ -1465,7 +1476,7 @@ int main( int argc, char **argv )
 						i+1, data.itag[i], data.x[i], data.y[i], data.z[i],
 						data.si[i], creal(curi), cimag(curi), cmag, ph );
 
-					if( plot.iplp1 != 1 )
+					if( (plot.iplp1 != 1) || (plot_fp == NULL) )
 					  continue;
 
 					if( plot.iplp2 == 1)
@@ -1563,7 +1574,7 @@ int main( int argc, char **argv )
 					  ethm, etha, ephm, epha, creal(ex), cimag(ex),
 					  creal(ey), cimag(ey), creal(ez), cimag(ez) );
 
-				  if( plot.iplp1 != 1)
+				  if( (plot.iplp1 != 1) || (plot_fp == NULL) )
 					continue;
 
 				  if( plot.iplp3 == 1)
