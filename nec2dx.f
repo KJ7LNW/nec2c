@@ -22,7 +22,8 @@ C
       PARAMETER (MAXSEG=1500, MAXMAT=1500)
       PARAMETER (IRESRV=MAXMAT**2)
       IMPLICIT REAL*8(A-H,O-Z)
-      CHARACTER AIN*2,ATST*2,INFILE*80,OUTFILE*80
+      CHARACTER AIN*2,ATST*2,INFILE*256,OUTFILE*256,PLTFILE*256,ARGKEY*3
+      LOGICAL LOPENED
 C***
       REAL*8 HPOL,PNET
 C      CHARACTER INMSG*48,OUTMSG*40
@@ -79,6 +80,33 @@ C***
       DATA PNET/6H      ,2H  ,6HSTRAIG,2HHT,6HCROSSE,1HD/
       DATA TA/1.745329252D-02/,CVEL/299.8/
       DATA LOADMX,NSMAX,NETMX/30,30,30/,NORMF/200/
+C     Command-line interface: nec2dx -i input.nec -o output.txt [-p plot.plt]
+      PLTFILE = ' '
+      NARGS = IARGC()
+      IF (NARGS .GE. 4) THEN
+        I = 1
+9001    IF (I .LT. NARGS) THEN
+          CALL GETARG(I, ARGKEY)
+          IF (ARGKEY(1:2) .EQ. '-i') THEN
+            CALL GETARG(I+1, INFILE)
+            I = I + 2
+          ELSE IF (ARGKEY(1:2) .EQ. '-o') THEN
+            CALL GETARG(I+1, OUTFILE)
+            I = I + 2
+          ELSE IF (ARGKEY(1:2) .EQ. '-p') THEN
+            CALL GETARG(I+1, PLTFILE)
+            I = I + 2
+          ELSE
+            I = I + 1
+          END IF
+          GO TO 9001
+        END IF
+        OPEN (UNIT=2,FILE=INFILE,STATUS='OLD',ERR=702)
+        OPEN (UNIT=3,FILE=OUTFILE,STATUS='UNKNOWN',ERR=704)
+        IF (PLTFILE .NE. ' ')
+     &    OPEN (UNIT=8,FILE=PLTFILE,STATUS='REPLACE',ERR=705)
+        GO TO 705
+      END IF
 706   CONTINUE
 C
 C     History:
@@ -91,7 +119,7 @@ C***VAX
       WRITE(*,700)
 700   FORMAT(' ENTER NAME OF INPUT FILE >',$)
 701   FORMAT(A)
-      READ(*,701,ERR=702) INFILE
+      READ(*,701,ERR=702,END=708) INFILE
 C      IF(INFILE.EQ.' ')INFILE='SYS$INPUT'
       OPEN (UNIT=2,FILE=INFILE,STATUS='OLD',ERR=702)
 C      OPEN (UNIT=2,FILE=INFILE,STATUS='OLD',ACTION='READ',ERR=702)
@@ -99,11 +127,12 @@ C      OPEN (UNIT=2,FILE=INFILE,STATUS='OLD',READONLY,ERR=702)
 707   CONTINUE
       WRITE(*,703)
 703   FORMAT(' ENTER NAME OF OUTPUT FILE >',$)
-      READ(*,701,ERR=704) OUTFILE
+      READ(*,701,ERR=704,END=708) OUTFILE
 C      IF(OUTFILE.EQ.' ')OUTFILE='SYS$OUTPUT'
 C      OPEN (UNIT=3,FILE=OUTFILE,STATUS='NEW',ERR=704)
       OPEN (UNIT=3,FILE=OUTFILE,STATUS='UNKNOWN',ERR=704)
       GO TO 705
+708   STOP
 702   CALL ERROR
       GO TO 706
 704   CALL ERROR
@@ -425,7 +454,11 @@ C
       IPLP2=ITMP2
       IPLP3=ITMP3
       IPLP4=ITMP4
-      OPEN (UNIT=8,FILE='PLTDAT.NEC',STATUS='NEW',ERR=14)
+      INQUIRE (UNIT=8, OPENED=LOPENED)
+      IF (.NOT. LOPENED) THEN
+        IF (PLTFILE .EQ. ' ') PLTFILE='PLTDAT.NEC'
+        OPEN (UNIT=8,FILE=PLTFILE,STATUS='REPLACE',ERR=14)
+      END IF
 C***
       GO TO 14
 C
@@ -7500,7 +7533,7 @@ C     REC        input line as read
 C     TOTCOL     total number of columns in REC
 C     TOTFLD     number of numeric fields
       IMPLICIT REAL*8(A-H,O-Z)
-      CHARACTER  CMND*2, BUFFER*20, REC*80
+      CHARACTER  CMND*2, BUFFER*20, REC*200
       INTEGER    INTFLD(MAXINT)
       INTEGER    BGNFLD(12), ENDFLD(12), TOTCOL, TOTFLD
       LOGICAL    FLDTRM
@@ -7578,9 +7611,9 @@ C  Parse out integer values and store into integer buffer array.
              LENGTH= ENDFLD(I) - BGNFLD(I) + 1
              BUFFER= REC(BGNFLD(I):ENDFLD(I))
              IND= INDEX( BUFFER(1:LENGTH), '.' )
-             IF (IND .GT. 0  .AND.  IND .LT. LENGTH) GO TO 9000
+             IF (IND .GT. 0  .AND.  IND .LT. LENGTH) GO TO 8900
              IF (IND .EQ. LENGTH) LENGTH= LENGTH - 1
-             READ( BUFFER(1:LENGTH), *, ERR=9000 ) INTFLD(I)
+             READ( BUFFER(1:LENGTH), *, ERR=8900 ) INTFLD(I)
  5090   CONTINUE
 
 C  Parse out real values and store into real buffer array.
@@ -7601,10 +7634,13 @@ C  Parse out real values and store into real buffer array.
      &                               BUFFER(INDE:LENGTH-1)
                        ENDIF
                   ENDIF
-                  READ( BUFFER(1:LENGTH), *, ERR=9000 ) REAFLD(I-MAXINT)
+                  READ( BUFFER(1:LENGTH), *, ERR=8900 ) REAFLD(I-MAXINT)
  6000        CONTINUE
         ENDIF
         RETURN
+
+C  Non-numeric token treated as end-of-fields (e.g. PL card filename suffix).
+ 8900   RETURN
 
 C  Print out text of record line when error occurs.
 
@@ -7619,13 +7655,13 @@ C  Print out text of record line when error occurs.
 C
 C  Input formats and output messages.
 C
- 8000   FORMAT (A80)
+ 8000   FORMAT (A200)
  8001   FORMAT (//,' ***** CARD ERROR - TOO MANY FIELDS IN RECORD')
  8002   FORMAT (//,' ***** CARD ERROR - INVALID NUMBER AT INTEGER',
      &          ' POSITION ',I1)
  8003   FORMAT (//,' ***** CARD ERROR - INVALID NUMBER AT REAL',
      &          ' POSITION ',I1)
- 8004   FORMAT (' ***** TEXT -->  ',A80)
+ 8004   FORMAT (' ***** TEXT -->  ',A200)
         END
         SUBROUTINE UPCASE( INTEXT, OUTTXT, LENGTH )
 C
