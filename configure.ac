@@ -8,19 +8,29 @@ AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_HEADERS([config.h])
 AM_MAINTAINER_MODE
 
-# Set CFLAGS if not set in environment
-AC_MSG_CHECKING([whether configure should try to set CFLAGS])
-if test "x${CFLAGS+set}" = xset; then
-   enable_cflags_setting=no
+# --disable-optimizations sets reproducible-IEEE flags on both C and Fortran
+# compilers; omitting the flag applies the standard -Wall -O2 defaults.
+AC_ARG_ENABLE([optimizations],
+  [AS_HELP_STRING([--disable-optimizations],
+    [use reproducible-IEEE flags: -O0 -ffp-contract=off -fexcess-precision=standard])],
+  [enable_opts=$enableval],
+  [enable_opts=yes])
+
+if test "x$enable_opts" = xno; then
+  test "x${CFLAGS+set}" != xset && CFLAGS="-O0 -ffp-contract=off -fexcess-precision=standard"
+  test "x${FFLAGS+set}" != xset && FFLAGS="-O0 -ffp-contract=off"
 else
-   enable_cflags_setting=yes
+  test "x${CFLAGS+set}" != xset && CFLAGS="-Wall -O2"
+  # nec2dx must not build at -O2: gfortran emits alignment-required SSE stores
+  # in the large MAIN prologue, and stack alignment varies with argv, causing
+  # SIGSEGV on helix-geometry decks.
+  FFLAGS="-O0 -ffp-contract=off"
 fi
-AC_MSG_RESULT($enable_cflags_setting)
-test "x$enable_cflags_setting" = xyes && CFLAGS="-Wall -O2"
 
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
+AC_PROG_F77
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 

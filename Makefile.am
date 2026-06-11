@@ -9,7 +9,9 @@ AM_CPPFLAGS = \
 	-DPACKAGE_LOCALE_DIR=\""$(prefix)/$(DATADIRNAME)/locale"\" \
 	@PACKAGE_CFLAGS@
 
-bin_PROGRAMS = nec2c
+bin_PROGRAMS = nec2c nec2dx
+
+nec2dx_SOURCES = nec2dx.f
 
 nec2c_SOURCES = \
   calculations.c \
