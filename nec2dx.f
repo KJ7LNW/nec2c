@@ -4871,12 +4871,8 @@ C     SEGMENTS
       X2(I)=(A1+(A2-A1)*Z2(I)/ABS(HL))*COS(2.*PI*Z2(I)/S)
       Y2(I)=(B1+(B2-B1)*Z2(I)/ABS(HL))*SIN(2.*PI*Z2(I)/S)
 20    IF(HL.GT.0) GO TO 25
-      COPY=X(I)
-      X(I)=Y(I)
-      Y(I)=COPY
-      COPY=X2(I)
-      X2(I)=Y2(I)
-      Y2(I)=COPY
+      Y(I)=-Y(I)
+      Y2(I)=-Y2(I)
 25    CONTINUE
       IF(A2.EQ.A1) GO TO 21
       SANGLE=ATAN(A2/(ABS(HL)+(ABS(HL)*A1)/(A2-A1)))

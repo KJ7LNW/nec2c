@@ -5613,7 +5613,7 @@ void helix( double s, double hl, double a1, double b1,
     double a2, double b2, double rad, int ns, int itg )
 {
   int ist, i, mreq;
-  double turns, zinc, copy, sangle, hdia, turn, pitch, hmaj, hmin;
+  double turns, zinc, sangle, hdia, turn, pitch, hmaj, hmin;
 
   ist= n;
   n += ns;
@@ -5676,12 +5676,8 @@ void helix( double s, double hl, double a1, double b1,
     if( hl > 0.)
       continue;
 
-    copy= x[i];
-    x[i]= y[i];
-    y[i]= copy;
-    copy= x2[i];
-    x2[i]= y2[i];
-    y2[i]= copy;
+    y[i]= -y[i];
+    y2[i]= -y2[i];
 
   } /* for( i = ist; i < n; i++ ) */
 

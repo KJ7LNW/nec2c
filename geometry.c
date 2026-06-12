@@ -1057,7 +1057,7 @@ void helix( double s, double hl, double a1, double b1,
 {
   int ist, i;
   size_t mreq;
-  double zinc, copy, sangle, hdia, turn, pitch, hmaj, hmin;
+  double zinc, sangle, hdia, turn, pitch, hmaj, hmin;
 
   ist= data.n;
   data.n += ns;
@@ -1122,12 +1122,8 @@ void helix( double s, double hl, double a1, double b1,
 	if( hl > 0.)
 	  continue;
 
-	copy= data.x1[i];
-	data.x1[i]= data.y1[i];
-	data.y1[i]= copy;
-	copy= data.x2[i];
-	data.x2[i]= data.y2[i];
-	data.y2[i]= copy;
+	data.y1[i]= -data.y1[i];
+	data.y2[i]= -data.y2[i];
 
   } /* for( i = ist; i < data.n; i++ ) */
 
