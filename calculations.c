@@ -1450,7 +1450,7 @@ void zint( double sigl, double rolam, complex double *zint )
 #define cc2		(-3.4e-6     + I*5.1e-6)
 #define cc3		(-2.52e-5    + I*0.0)
 #define cc4		(-9.06e-5    - I*9.01e-5)
-#define cc5		( 0.         - I*9.765e4)
+#define cc5		( 0.         - I*9.765e-4)
 #define cc6		(.0110486    - I*0.0110485)
 #define cc7		( 0.         - I*0.3926991)
 #define cc8		( 1.6e-6     - I*3.2e-6)
@@ -1497,6 +1497,7 @@ void zint( double sigl, double rolam, complex double *zint )
 	  br2= cmplx( ber, bei);
 	  br1= br1/ br2;
 	  *zint= CPLX_01* sqrt( cmotp/sigl )* br1/ rolam;
+	  return;
 
   } /* if( x <= 8.) */
 
@@ -1505,6 +1506,7 @@ void zint( double sigl, double rolam, complex double *zint )
 	br2= g( x)* ph(8./ x)- br2* ph(-8./ x);
 	br1= br1/ br2;
 	*zint= CPLX_01* sqrt( cmotp/ sigl)* br1/ rolam;
+	return;
 
   } /* if( x <= 110.) */
 
