@@ -13,6 +13,7 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/times.h>
+#include <limits.h>
 
 #ifndef	TRUE
 #define	TRUE	1

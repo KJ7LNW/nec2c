@@ -42,7 +42,7 @@ static void open_plot_file( char *fname )
 
   if( (plot_fp = fopen( fname, "w" )) == NULL )
   {
-	char mesg[88] = "nec2c: ";
+	char mesg[PATH_MAX + 8] = "nec2c: ";
 
 	strncat( mesg, fname, sizeof(mesg) - strlen(mesg) - 1 );
 	perror( mesg );
@@ -54,7 +54,7 @@ static void open_plot_file( char *fname )
 
 int main( int argc, char **argv )
 {
-  char infile[81] = "", otfile[81] = "";
+  char infile[PATH_MAX] = "", otfile[PATH_MAX] = "";
   char ain[3], line_buf[LINE_LEN];
 
 /* input card mnemonic list */
@@ -126,13 +126,13 @@ int main( int argc, char **argv )
 	switch( option )
 	{
 	  case 'i' : /* specify input file name */
-		if( strlen(optarg) > 75 )
+		if( strlen(optarg) >= PATH_MAX - 5 )
 		  abort_on_error(-1);
 		strcpy( infile, optarg );
 		break;
 
 	  case 'o' : /* specify output file name */
-		if( strlen(optarg) > 75 )
+		if( strlen(optarg) >= PATH_MAX - 5 )
 		  abort_on_error(-2);
 		strcpy( otfile, optarg );
 		break;
@@ -160,7 +160,7 @@ int main( int argc, char **argv )
   /*** open input file ***/
   if( (input_fp = fopen(infile, "r")) == NULL )
   {
-	char mesg[88] = "nec2c: ";
+	char mesg[PATH_MAX + 8] = "nec2c: ";
 
 	strcat( mesg, infile );
 	perror( mesg );
@@ -184,7 +184,7 @@ int main( int argc, char **argv )
   /* open output file */
   if( (output_fp = fopen(otfile, "w")) == NULL )
   {
-	char mesg[88] = "nec2c: ";
+	char mesg[PATH_MAX + 8] = "nec2c: ";
 
 	strcat( mesg, otfile );
 	perror( mesg );
@@ -916,7 +916,7 @@ int main( int argc, char **argv )
 		  plot.iplp4= itmp4;
 
 		  {
-			char plotfile[81];
+			char plotfile[PATH_MAX];
 
 			/* Make a plot file name from the input file. */
 			strcpy( plotfile, infile );
