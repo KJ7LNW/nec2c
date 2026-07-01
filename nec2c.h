@@ -79,7 +79,7 @@
 #define	LF	0x0a
 
 /* max length of a line read from input file */
-#define	LINE_LEN	132
+#define	LINE_LEN	512
 
 /*** Structs encapsulating global ("common") variables ***/
 /* common  /crnt/ */
