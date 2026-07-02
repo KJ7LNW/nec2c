@@ -7534,6 +7534,11 @@ C     TOTFLD     number of numeric fields
       INTEGER    BGNFLD(12), ENDFLD(12), TOTCOL, TOTFLD
       LOGICAL    FLDTRM
       DIMENSION  REAFLD(MAXREA)
+
+      LOGICAL    ISNUM
+      CHARACTER*1 CHTMP
+      ISNUM(CHTMP) = (CHTMP.GE.'0' .AND. CHTMP.LE.'9') .OR.
+     &               CHTMP.EQ.'+' .OR. CHTMP.EQ.'-'
 C
       READ(INUNIT, 8000, IOSTAT=IEOF) REC
       CALL UPCASE( REC, REC, TOTCOL )
@@ -7606,10 +7611,14 @@ C  Parse out integer values and store into integer buffer array.
         DO 5090 I=1,J
              LENGTH= ENDFLD(I) - BGNFLD(I) + 1
              BUFFER= REC(BGNFLD(I):ENDFLD(I))
+
+C  The PL card carries a trailing plot filename after its integer fields; a
+C  non-numeric field lead marks the filename, treated as end-of-fields.
+             IF (CMND.EQ.'PL' .AND. .NOT.ISNUM(BUFFER(1:1))) RETURN
              IND= INDEX( BUFFER(1:LENGTH), '.' )
-             IF (IND .GT. 0  .AND.  IND .LT. LENGTH) GO TO 8900
+             IF (IND .GT. 0  .AND.  IND .LT. LENGTH) GO TO 9000
              IF (IND .EQ. LENGTH) LENGTH= LENGTH - 1
-             READ( BUFFER(1:LENGTH), *, ERR=8900 ) INTFLD(I)
+             READ( BUFFER(1:LENGTH), *, ERR=9000 ) INTFLD(I)
  5090   CONTINUE
 
 C  Parse out real values and store into real buffer array.
@@ -7619,6 +7628,10 @@ C  Parse out real values and store into real buffer array.
              DO 6000 I=J,TOTFLD
                   LENGTH= ENDFLD(I) - BGNFLD(I) + 1
                   BUFFER= REC(BGNFLD(I):ENDFLD(I))
+
+C  A four-integer PL card places its filename in the real-field range; the
+C  non-numeric field lead marks it, treated as end-of-fields.
+                  IF (CMND.EQ.'PL' .AND. .NOT.ISNUM(BUFFER(1:1))) RETURN
                   IND= INDEX( BUFFER(1:LENGTH), '.' )
                   IF (IND .EQ. 0) THEN
                        INDE= INDEX( BUFFER(1:LENGTH), 'E' )
@@ -7630,13 +7643,10 @@ C  Parse out real values and store into real buffer array.
      &                               BUFFER(INDE:LENGTH-1)
                        ENDIF
                   ENDIF
-                  READ( BUFFER(1:LENGTH), *, ERR=8900 ) REAFLD(I-MAXINT)
+                  READ( BUFFER(1:LENGTH), *, ERR=9000 ) REAFLD(I-MAXINT)
  6000        CONTINUE
         ENDIF
         RETURN
-
-C  Non-numeric token treated as end-of-fields (e.g. PL card filename suffix).
- 8900   RETURN
 
 C  Print out text of record line when error occurs.
 
