@@ -7573,7 +7573,7 @@ C
 C  Set the ending index when the character is a comma or space and the pointer
 C  is in a field position (FLDTRM = .TRUE.).
 C
-          ELSE IF (K .EQ. 32  .OR.  K .EQ. 44) THEN
+          ELSE IF (K .EQ. 32  .OR.  K .EQ. 44  .OR.  K .EQ. 9) THEN
              IF (FLDTRM) THEN
                 ENDFLD(TOTFLD)= J - 1
                 FLDTRM= .FALSE.
