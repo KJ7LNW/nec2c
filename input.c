@@ -222,7 +222,7 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
 	double *f4, double *f5, double *f6 )
 {
   char line_buf[134];
-  int nlin, i, line_idx;
+  int nlin, i, line_idx, pl_card;
   int nint = 4, nflt = 6;
   int iarr[4] = { 0, 0, 0, 0 };
   double rarr[6] = { 0., 0., 0., 0., 0., 0. };
@@ -245,6 +245,9 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
   /* extract card's mnemonic code */
   strncpy( gm, line_buf, 2 );
   gm[2] = '\0';
+
+  /* the PL plot card ends in a filename token rather than a numeric field */
+  pl_card = ( strcmp( gm, "PL" ) == 0 );
 
   /* Exit if "XT" command read (for testing) */
   if( strcmp( gm, "XT" ) == 0 )
@@ -273,7 +276,11 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
 		  (line_buf[  line_idx] >  '9')) &&
 		(line_buf[  line_idx] != '+')  &&
 		(line_buf[  line_idx] != '-') )
-	  if( line_buf[line_idx] == '\0' )
+	  if( (line_buf[line_idx] == '\0') ||
+	      (pl_card &&
+	       (line_buf[line_idx] != ' ') &&
+	       (line_buf[line_idx] != '\t') &&
+	       (line_buf[line_idx] != ',')) )
 	  {
 		*i1= iarr[0];
 		*i2= iarr[1];
@@ -341,7 +348,11 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
 		(line_buf[  line_idx] != '+')  &&
 		(line_buf[  line_idx] != '-')  &&
 		(line_buf[  line_idx] != '.') )
-	  if( line_buf[line_idx] == '\0' )
+	  if( (line_buf[line_idx] == '\0') ||
+	      (pl_card &&
+	       (line_buf[line_idx] != ' ') &&
+	       (line_buf[line_idx] != '\t') &&
+	       (line_buf[line_idx] != ',')) )
 	  {
 		*i1= iarr[0];
 		*i2= iarr[1];
