@@ -18,13 +18,16 @@ AC_ARG_ENABLE([optimizations],
 
 if test "x$enable_opts" = xno; then
   test "x${CFLAGS+set}" != xset && CFLAGS="-O0 -ffp-contract=off -fexcess-precision=standard"
-  test "x${FFLAGS+set}" != xset && FFLAGS="-O0 -ffp-contract=off"
+  test "x${FFLAGS+set}" != xset && FFLAGS="-std=legacy -w -O0 -ffp-contract=off -fno-automatic -mcmodel=medium"
 else
   test "x${CFLAGS+set}" != xset && CFLAGS="-Wall -O2"
   # nec2dx must not build at -O2: gfortran emits alignment-required SSE stores
   # in the large MAIN prologue, and stack alignment varies with argv, causing
   # SIGSEGV on helix-geometry decks.
-  FFLAGS="-O0 -ffp-contract=off"
+  # -fno-automatic gives F77 locals static storage so they start zeroed;
+  # without it the current solve reads uninitialized stack and impedance
+  # diverges to garbage on some decks.
+  FFLAGS="-std=legacy -w -O0 -ffp-contract=off -fno-automatic -mcmodel=medium"
 fi
 
 # Checks for programs.
