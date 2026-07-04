@@ -956,17 +956,18 @@ void etmns( double p1, double p2, double p3, double p4,
   ds= p6*59.958;
   dsh= p6/(2.* TP);
 
-  is= 0;
-  i1= data.n-2;
   for( i = 0; i < data.npm; i++ )
   {
+	/* patch index, valid only when i >= data.n */
+	int pi = i - data.n;
+
 	if( i >= data.n )
 	{
-	  i1 += 2;
+	  i1 = data.n + 2*pi;
 	  i2 = i1+1;
-	  pxl= data.px[is]- p1;
-	  pyl= data.py[is]- p2;
-	  pzl= data.pz[is]- p3;
+	  pxl= data.px[pi]- p1;
+	  pyl= data.py[pi]- p2;
+	  pzl= data.pz[pi]- p3;
 	}
 	else
 	{
@@ -1024,13 +1025,12 @@ void etmns( double p1, double p2, double p3, double p4,
 	  pxl= wy* qz- wz* qy;
 	  pyl= wz* qx- wx* qz;
 	  pzl= wx* qy- wy* qx;
-	  tt2= dsh* tt1* cmplx(1./ r, TP)/ r* sth* data.psalp[is];
+	  tt2= dsh* tt1* cmplx(1./ r, TP)/ r* sth* data.psalp[pi];
 	  cx= tt2* pxl;
 	  cy= tt2* pyl;
 	  cz= tt2* pzl;
-	  e[i2]= cx* data.t1x[is]+ cy* data.t1y[is]+ cz* data.t1z[is];
-	  e[i1]= cx* data.t2x[is]+ cy* data.t2y[is]+ cz* data.t2z[is];
-	  is++;
+	  e[i2]= cx* data.t1x[pi]+ cy* data.t1y[pi]+ cz* data.t1z[pi];
+	  e[i1]= cx* data.t2x[pi]+ cy* data.t2y[pi]+ cz* data.t2z[pi];
 	} /* if( i < data.n) */
 
   } /* for( i = 0; i < npm; i++ ) */
