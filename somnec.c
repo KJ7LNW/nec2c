@@ -321,7 +321,6 @@ void evlua( complex double *erv, complex double *ezv,
 	*ezv=conj(ck1sq*(ans[1]+ck2sq*ans[4]));
 	*erh=conj(ck2sq*(ans[0]+ans[5]));
 	*eph=-conj(ck2sq*(ans[3]+ans[5]));
-
 	return;
 
   } /* if(zph >= 2.*rho) */
@@ -353,41 +352,37 @@ void evlua( complex double *erv, complex double *ezv,
   gshank(cp1,delta,ans,6,sum,0,bk,bk);
   rmis=rho*(creal(ck1)-ck2);
 
-  jump = FALSE;
-  if( (rmis >= 2.*ck2) && (rho >= 1.e-10) )
-  {
-	if(zph >= 1.e-10)
-	{
-	  bk=cmplx(-zph,rho)*(ck1-cp3);
-	  rmis=-creal(bk)/fabs(cimag(bk));
-	  if(rmis > 4.*rho/zph)
-		jump = TRUE;
-	}
-
-	if( ! jump )
-	{
-	  /* integrate up between branch cuts, then to + infinity */
-	  cp1=ck1-(.1+I*0.2);
-	  cp2=cp1+.2;
-	  bk=cmplx(0.,del);
-	  gshank(cp1,bk,sum,6,ans,0,bk,bk);
-	  a=cp1;
-	  b=cp2;
-	  rom1(6,ans,1);
-	  for( i = 0; i < 6; i++ )
-		ans[i] -= sum[i];
-
-	  gshank(cp3,bk,sum,6,ans,0,bk,bk);
-	  gshank(cp2,delta2,ans,6,sum,0,bk,bk);
-	}
-
+  if( (rmis < 2.*ck2) || (rho < 1.e-10) )
 	jump = TRUE;
-
-  } /* if( (rmis >= 2.*ck2) || (rho >= 1.e-10) ) */
-  else
+  else if( zph < 1.e-10 )
 	jump = FALSE;
+  else
+  {
+	bk=cmplx(-zph,rho)*(ck1-cp3);
+	rmis=-creal(bk)/fabs(cimag(bk));
+	if(rmis > 4.*rho/zph)
+	  jump = TRUE;
+	else
+	  jump = FALSE;
+  }
 
   if( ! jump )
+  {
+	/* integrate up between branch cuts, then to + infinity */
+	cp1=ck1-(.1+I*0.2);
+	cp2=cp1+.2;
+	bk=cmplx(0.,del);
+	gshank(cp1,bk,sum,6,ans,0,bk,bk);
+	a=cp1;
+	b=cp2;
+	rom1(6,ans,1);
+	for( i = 0; i < 6; i++ )
+	  ans[i] -= sum[i];
+
+	gshank(cp3,bk,sum,6,ans,0,bk,bk);
+	gshank(cp2,delta2,ans,6,sum,0,bk,bk);
+  }
+  else
   {
 	/* integrate below branch points, then to + infinity */
 	for( i = 0; i < 6; i++ )
@@ -401,8 +396,7 @@ void evlua( complex double *erv, complex double *ezv,
 	delta=bk-cp3;
 	delta *= del/cabs(delta);
 	gshank(cp3,delta,ans,6,sum,1,bk,delta2);
-
-  } /* if( ! jump ) */
+  }
 
   ans[5] *= ck1;
 
