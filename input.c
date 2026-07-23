@@ -222,13 +222,13 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
 	double *f4, double *f5, double *f6 )
 {
   char line_buf[134];
-  int nlin, i, line_idx, pl_card;
+  int nlin, i, line_idx, pl_card, eof;
   int nint = 4, nflt = 6;
   int iarr[4] = { 0, 0, 0, 0 };
   double rarr[6] = { 0., 0., 0., 0., 0., 0. };
 
   /* read a line from input file */
-  load_line( line_buf, input_fp );
+  eof = load_line( line_buf, input_fp );
 
   /* get line length */
   nlin= (int)strlen( line_buf );
@@ -236,6 +236,15 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
   /* abort if card's mnemonic too short or missing */
   if( nlin < 2 )
   {
+	/* synthesize a terminating EN card at end of file instead of
+	 * aborting, matching the necpp and Fortran command readers */
+	if( eof == EOF )
+	{
+	  strcpy( gm, "EN" );
+	  *i1 = *i2 = *i3 = *i4 = 0;
+	  *f1 = *f2 = *f3 = *f4 = *f5 = *f6 = 0.0;
+	  return;
+	}
 	fprintf( output_fp,
 		"\n  COMMAND DATA CARD ERROR:"
 		"\n  CARD'S MNEMONIC CODE TOO SHORT OR MISSING." );
