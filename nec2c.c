@@ -128,7 +128,7 @@ static void sig_handler( int signal );
 int main( int argc, char **argv )
 {
   char infile[81] = "", otfile[81] = "";
-  char ain[3], line_buf[81];
+  char ain[3], line_buf[LINE_LEN+1];
 
   /* input card mnemonic list */
   /* "XT" stands for "exit", added for testing */
@@ -9091,7 +9091,7 @@ void rdpat( void )
 void readgm( char *gm, int *i1, int *i2, double *x1, double *y1,
     double *z1, double *x2, double *y2, double *z2, double *rad )
 {
-  char line_buf[134];
+  char line_buf[LINE_LEN+1];
   int nlin, i, line_idx;
   int nint = 2, nflt = 7;
   int iarr[2] = { 0, 0 };
@@ -9285,7 +9285,7 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
     double *f1, double *f2, double *f3,
     double *f4, double *f5, double *f6 )
 {
-  char line_buf[134];
+  char line_buf[LINE_LEN+1];
   int nlin, i, line_idx;
   int nint = 4, nflt = 6;
   int iarr[4] = { 0, 0, 0, 0 };

@@ -1723,7 +1723,7 @@ void subph( int nx, int ny )
 void readgm( char *gm, int *i1, int *i2, double *x1, double *y1,
 	double *z1, double *x2, double *y2, double *z2, double *rad )
 {
-  char line_buf[134];
+  char line_buf[LINE_LEN+1];
   int nlin, i, line_idx;
   int nint = 2, nflt = 7;
   int iarr[2] = { 0, 0 };

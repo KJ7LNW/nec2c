@@ -55,7 +55,7 @@ static void open_plot_file( char *fname )
 int main( int argc, char **argv )
 {
   char infile[PATH_MAX] = "", otfile[PATH_MAX] = "";
-  char ain[3], line_buf[LINE_LEN];
+  char ain[3], line_buf[LINE_LEN+1];
 
 /* input card mnemonic list */
 #define NUM_CMNDS  20

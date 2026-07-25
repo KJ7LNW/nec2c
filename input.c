@@ -221,7 +221,7 @@ void readmn( char *gm, int *i1, int *i2, int *i3, int *i4,
 	double *f1, double *f2, double *f3,
 	double *f4, double *f5, double *f6 )
 {
-  char line_buf[134];
+  char line_buf[LINE_LEN+1];
   int nlin, i, line_idx, pl_card, eof;
   int nint = 4, nflt = 6;
   int iarr[4] = { 0, 0, 0, 0 };
