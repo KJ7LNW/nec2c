@@ -1086,6 +1086,35 @@ void helix( double s, double hl, double a1, double b1,
   mem_realloc( (void *)&data.z2, mreq );
   mem_realloc( (void *)&data.bi, mreq );
 
+  /* A flat spiral (hl == 0) advances the rotation angle by segment index,
+   * independent of hl; the tapered helix path divides the radius by
+   * fabs(hl) and cannot form a spiral when hl is zero. */
+  if( hl == 0.)
+  {
+	double phi= 0.;
+	double dphi= 2.* PI/ s;
+	double da=( a1- a2)/ ns;
+	double db=( b1- b2)/ ns;
+
+	for( i = ist; i < data.n; i++ )
+	{
+	  data.bi[i]= rad;
+	  data.itag[i]= itg;
+	  data.z1[i]= 0.;
+	  data.z2[i]= 0.;
+
+	  data.x1[i]= a1* cos( phi);
+	  data.y1[i]= b1* sin( phi);
+	  a1 -= da;
+	  b1 -= db;
+	  phi += dphi;
+	  data.x2[i]= a1* cos( phi);
+	  data.y2[i]= b1* sin( phi);
+	}
+
+	return;
+  }
+
   data.z1[ist]=0.;
   for( i = ist; i < data.n; i++ )
   {
@@ -1129,9 +1158,12 @@ void helix( double s, double hl, double a1, double b1,
 
   if( a2 != a1)
   {
-	sangle= atan( a2/( fabs( hl)+( fabs( hl)* a1)/( a2- a1)));
-	fprintf( output_fp,
-		"\n       THE CONE ANGLE OF THE SPIRAL IS %10.4f", sangle );
+	if( hl != 0.)
+	{
+	  sangle= atan( a2/( fabs( hl)+( fabs( hl)* a1)/( a2- a1)));
+	  fprintf( output_fp,
+		  "\n       THE CONE ANGLE OF THE SPIRAL IS %10.4f", sangle );
+	}
 	return;
   }
 

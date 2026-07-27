@@ -4850,7 +4850,28 @@ C     SEGMENTS
       MP=M
       IPSYM=0
       IF(NS.LT.1) RETURN
-      TURNS=ABS(HL/S)
+      IF(HL.NE.0) GO TO 6
+      DPHI=2.*PI/S
+      DA=(A1-A2)/NS
+      DB=(B1-B2)/NS
+      PHI=0.
+      AA=A1
+      BB=B1
+      DO 7 I=IST,N
+      BI(I)=RAD
+      ITAG(I)=ITG
+      Z(I)=0.
+      Z2(I)=0.
+      X(I)=AA*COS(PHI)
+      Y(I)=BB*SIN(PHI)
+      AA=AA-DA
+      BB=BB-DB
+      PHI=PHI+DPHI
+      X2(I)=AA*COS(PHI)
+      Y2(I)=BB*SIN(PHI)
+7     CONTINUE
+      RETURN
+6     TURNS=ABS(HL/S)
       ZINC=ABS(HL/NS)
       Z(IST)=0.
       DO 25 I=IST,N
@@ -4875,6 +4896,7 @@ C     SEGMENTS
       Y2(I)=-Y2(I)
 25    CONTINUE
       IF(A2.EQ.A1) GO TO 21
+      IF(HL.EQ.0) RETURN
       SANGLE=ATAN(A2/(ABS(HL)+(ABS(HL)*A1)/(A2-A1)))
       WRITE(3,104)  SANGLE
 104   FORMAT(5X,'THE CONE ANGLE OF THE SPIRAL IS',F10.4)
